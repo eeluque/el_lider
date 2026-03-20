@@ -19,7 +19,7 @@ export default async function InventoryKardexPage({
   return (
     <div>
       <h1 className="text-2xl font-bold">Kardex de inventario</h1>
-      <p className="mt-1 text-neutral-600">Movimientos por período.</p>
+      <p className="mt-1 text-neutral-600">Movimientos por periodo.</p>
       <form className="mt-4 flex flex-wrap gap-2">
         <input type="date" name="from" defaultValue={from} className="rounded border px-2 py-1" />
         <input type="date" name="to" defaultValue={to} className="rounded border px-2 py-1" />
@@ -36,20 +36,20 @@ export default async function InventoryKardexPage({
           <thead>
             <tr className="border-b bg-neutral-50">
               <th className="p-2 text-left">Fecha</th>
-              <th className="p-2 text-left">Ingrediente</th>
-              <th className="p-2 text-left">Tipo</th>
-              <th className="p-2 text-right">Cantidad</th>
+              <th className="p-2 text-left">Tipo de movimiento</th>
               <th className="p-2 text-left">Motivo</th>
+              <th className="p-2 text-left">Ingrediente</th>
+              <th className="p-2 text-right">Stock</th>
             </tr>
           </thead>
           <tbody>
             {movements.map((m: { id: string; created_at: string; movement_type: string; quantity: number; reason: string | null; ingredient?: { name: string } }) => (
               <tr key={m.id} className="border-b last:border-0">
                 <td className="p-2">{new Date(m.created_at).toLocaleString("es-HN")}</td>
-                <td className="p-2">{(m.ingredient as { name: string })?.name ?? "—"}</td>
                 <td className="p-2">{m.movement_type}</td>
-                <td className="p-2 text-right">{Number(m.quantity)}</td>
                 <td className="p-2">{m.reason ?? "—"}</td>
+                <td className="p-2">{(m.ingredient as { name: string })?.name ?? "—"}</td>
+                <td className="p-2 text-right">{Number(m.quantity)}</td>
               </tr>
             ))}
           </tbody>
