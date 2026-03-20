@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/db";
 import { createOrder } from "@/services/orders";
-import type { CartItem } from "../order/order-cart";
+import type { CartItem } from "@/lib/cart-storage";
 
 export async function submitOrder(formData: FormData): Promise<{ error?: string; orderNumber?: string }> {
   const itemsJson = formData.get("items");

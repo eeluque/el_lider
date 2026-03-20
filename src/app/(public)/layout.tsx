@@ -1,12 +1,11 @@
-import { PublicNav } from "@/components/layout/PublicNav";
+import { PublicShell } from "@/components/layout/PublicShell";
 
 export const dynamic = "force-dynamic";
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-muted/60">
-      <PublicNav />
-      <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+      <PublicShell>{children}</PublicShell>
     </div>
   );
 }

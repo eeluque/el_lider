@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { submitOrder } from "./actions";
-import type { CartItem } from "../order/order-cart";
-
-const CART_STORAGE_KEY = "el_lider_cart";
+import { CART_STORAGE_KEY, type CartItem } from "@/lib/cart-storage";
+import { useCart } from "@/components/cart/cart-context";
 
 export function CheckoutForm() {
+  const { clearCart } = useCart();
   const { data: session, status } = useSession();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,6 +49,7 @@ export function CheckoutForm() {
       if (res.orderNumber) {
         setResult({ orderNumber: res.orderNumber });
         sessionStorage.removeItem(CART_STORAGE_KEY);
+        clearCart();
       }
     } catch (err) {
       setError("Error al enviar el pedido.");

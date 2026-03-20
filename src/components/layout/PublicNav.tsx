@@ -17,9 +17,6 @@ export function PublicNav() {
           <Link href="/menu" className="text-sm text-foreground/80 hover:text-foreground hover:underline">
             Menú
           </Link>
-          <Link href="/order" className="text-sm text-foreground/80 hover:text-foreground hover:underline">
-            Ordenar
-          </Link>
           {status === "loading" ? (
             <span className="text-sm text-neutral-400">...</span>
           ) : session ? (
