@@ -1,0 +1,140 @@
+import { getSupabaseAdmin } from "@/lib/db";
+
+/** Delivered orders for a given day (date string YYYY-MM-DD) */
+export async function getDeliveredOrdersDaily(date: string) {
+  const supabase = getSupabaseAdmin();
+  const from = `${date}T00:00:00`;
+  const to = `${date}T23:59:59`;
+  const { data } = await supabase
+    .from("orders")
+    .select("*, order_items(*, menu_item:menu_items(name))")
+    .eq("status", "delivered")
+    .gte("created_at", from)
+    .lte("created_at", to)
+    .order("created_at", { ascending: false });
+  return data ?? [];
+}
+
+/** Inventory movements with optional filters */
+export async function getInventoryKardex(params: { ingredientId?: string; from?: string; to?: string }) {
+  const supabase = getSupabaseAdmin();
+  let q = supabase
+    .from("inventory_movements")
+    .select("*, ingredient:ingredients(name)")
+    .order("created_at", { ascending: false });
+  if (params.ingredientId) q = q.eq("ingredient_id", params.ingredientId);
+  if (params.from) q = q.gte("created_at", params.from);
+  if (params.to) q = q.lte("created_at", params.to);
+  const { data } = await q;
+  return data ?? [];
+}
+
+/** Critical stock (current_stock <= minimum_stock) */
+export async function getCriticalStockReport() {
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("ingredients")
+    .select("*")
+    .eq("active", true)
+    .order("current_stock");
+  const list = (data ?? []) as { id: string; name: string; unit: string; current_stock: number; minimum_stock: number }[];
+  return list.filter((i) => Number(i.current_stock) <= Number(i.minimum_stock));
+}
+
+/** Cancelled orders with optional filters */
+export async function getCancelledOrders(params: { from?: string; to?: string; reason?: string }) {
+  const supabase = getSupabaseAdmin();
+  let q = supabase
+    .from("orders")
+    .select("*, order_items(*, menu_item:menu_items(name))")
+    .eq("status", "cancelled")
+    .order("created_at", { ascending: false });
+  if (params.from) q = q.gte("created_at", params.from);
+  if (params.to) q = q.lte("created_at", params.to);
+  if (params.reason) q = q.ilike("cancellation_reason", `%${params.reason}%`);
+  const { data } = await q;
+  return data ?? [];
+}
+
+/** Sales totals by day for a range */
+export async function getSalesSummary(params: { from: string; to: string; groupBy: "day" | "week" | "month" }) {
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("orders")
+    .select("created_at, total_price, status")
+    .in("status", ["delivered", "ready"])
+    .gte("created_at", params.from)
+    .lte("created_at", params.to)
+    .order("created_at");
+  const rows = (data ?? []) as { created_at: string; total_price: number; status: string }[];
+  const delivered = rows.filter((r) => r.status === "delivered" || r.status === "ready");
+  const byPeriod: Record<string, number> = {};
+  for (const r of delivered) {
+    const d = new Date(r.created_at);
+    let key: string;
+    if (params.groupBy === "day") key = d.toISOString().slice(0, 10);
+    else if (params.groupBy === "week") key = getWeekKey(d);
+    else key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    byPeriod[key] = (byPeriod[key] ?? 0) + Number(r.total_price);
+  }
+  return { byPeriod, total: delivered.reduce((s, r) => s + Number(r.total_price), 0) };
+}
+
+function getWeekKey(d: Date) {
+  const start = new Date(d);
+  start.setDate(d.getDate() - d.getDay());
+  return start.toISOString().slice(0, 10);
+}
+
+/** Top dishes by quantity sold in a period */
+export async function getTopDishes(params: { from: string; to: string }) {
+  const supabase = getSupabaseAdmin();
+  const { data: orders } = await supabase
+    .from("orders")
+    .select("id")
+    .in("status", ["delivered", "ready"])
+    .gte("created_at", params.from)
+    .lte("created_at", params.to);
+  const orderIds = (orders ?? []).map((o) => o.id);
+  if (orderIds.length === 0) return [];
+  const { data: items } = await supabase
+    .from("order_items")
+    .select("menu_item_id, quantity, unit_price")
+    .in("order_id", orderIds);
+  const byItem: Record<string, { name: string; quantity: number; revenue: number }> = {};
+  for (const i of items ?? []) {
+    const id = i.menu_item_id;
+    if (!byItem[id]) byItem[id] = { name: id, quantity: 0, revenue: 0 };
+    byItem[id].quantity += i.quantity;
+    byItem[id].revenue += i.quantity * Number(i.unit_price);
+  }
+  const menuIds = Object.keys(byItem);
+  if (menuIds.length === 0) return [];
+  const { data: names } = await supabase.from("menu_items").select("id, name").in("id", menuIds);
+  const nameMap = Object.fromEntries((names ?? []).map((n) => [n.id, n.name]));
+  return Object.entries(byItem)
+    .map(([id, v]) => ({ id, name: nameMap[id] ?? id, quantity: v.quantity, revenue: v.revenue }))
+    .sort((a, b) => b.quantity - a.quantity);
+}
+
+/** Ingredient consumption (OUT movements) in period */
+export async function getIngredientConsumption(params: { from: string; to: string }) {
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("inventory_movements")
+    .select("*, ingredient:ingredients(name)")
+    .eq("movement_type", "OUT")
+    .gte("created_at", params.from)
+    .lte("created_at", params.to)
+    .order("created_at");
+  const rows = (data ?? []) as { ingredient_id: string; quantity: number; created_at: string; ingredient?: { name: string } }[];
+  const byIngredient: Record<string, { name: string; total: number }> = {};
+  for (const r of rows) {
+    const id = r.ingredient_id;
+    if (!byIngredient[id]) byIngredient[id] = { name: (r.ingredient as { name: string })?.name ?? id, total: 0 };
+    byIngredient[id].total += Number(r.quantity);
+  }
+  return Object.entries(byIngredient)
+    .map(([id, v]) => ({ id, ...v }))
+    .sort((a, b) => b.total - a.total);
+}

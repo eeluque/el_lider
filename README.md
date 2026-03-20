@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Comedor El Líder
 
-## Getting Started
+Prototipo de sistema de pedidos, inventario y reportes para un comedor familiar. Proyecto de análisis de sistemas (universidad).
 
-First, run the development server:
+## Stack
+
+- **Next.js** (App Router), **React**, **TypeScript**
+- **Tailwind CSS**, **shadcn/ui**
+- **PostgreSQL** vía **Supabase**
+- **NextAuth.js** (Credentials) para autenticación y roles
+
+## Requisitos
+
+- Node.js 20+
+- Cuenta en [Supabase](https://supabase.com)
+
+## Configuración
+
+1. Clonar y instalar dependencias:
+
+   ```bash
+   npm install
+   ```
+
+2. Crear proyecto en Supabase y ejecutar la migración SQL:
+   - En el dashboard de Supabase → SQL Editor, ejecutar el contenido de `supabase/migrations/001_initial_schema.sql`.
+
+3. Variables de entorno:
+   - Copiar `.env.example` a `.env.local`.
+   - Rellenar:
+     - `NEXT_PUBLIC_SUPABASE_URL`: URL del proyecto Supabase.
+     - `SUPABASE_SERVICE_ROLE_KEY`: service role key (Settings → API).
+     - `AUTH_SECRET`: generar con `openssl rand -base64 32` (o similar).
+
+4. (Opcional) Poblar datos de prueba:
+   ```bash
+   npm run seed
+   ```
+   Tras el seed podrás entrar con:
+   - **Admin:** admin@ellider.com / admin123
+   - **Empleado:** empleado1@ellider.com / emp123
+   - **Cliente:** cliente1@test.com / cli123
+
+## Desarrollo
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+```
 
-## Learn More
+## Rutas principales
 
-To learn more about Next.js, take a look at the following resources:
+- **Público:** `/`, `/menu`, `/order`, `/checkout`, `/login`, `/register`
+- **Cliente (cuenta):** `/account`, `/account/orders`, `/account/rewards`
+- **Empleado:** `/employee`, `/employee/orders`, `/employee/inventory`, `/employee/reports/*`
+- **Admin:** `/admin`, `/admin/orders`, `/admin/menu`, `/admin/inventory`, `/admin/employees`, `/admin/reports/*`, `/admin/analytics/*`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Documentación de diseño
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+En la carpeta `docs/`:
 
-## Deploy on Vercel
+- `01-DATABASE-SCHEMA.md` – Esquema de datos
+- `02-AUTH-AND-ROLES.md` – Auth y roles
+- `03-FOLDER-STRUCTURE.md` – Estructura del proyecto
+- `04-ROUTES-LIST.md` – Listado de rutas
+- `05-SUPABASE-SQL.md` – SQL para Supabase (referencia; usar `supabase/migrations/001_initial_schema.sql`)
+- `06-SEED-DATA-PLAN.md` – Plan de datos de prueba
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Notas
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Es un prototipo académico; no usar en producción sin endurecer seguridad y validaciones.
+- Los reportes tienen filtros básicos; la exportación a PDF/Excel está preparada para ampliarse después.
