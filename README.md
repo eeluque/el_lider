@@ -32,7 +32,13 @@ Prototipo de sistema de pedidos, inventario y reportes para un comedor familiar.
      - `SUPABASE_SERVICE_ROLE_KEY`: service role key (Settings → API).
      - `AUTH_SECRET`: generar con `openssl rand -base64 32` (o similar).
 
-4. (Opcional) Poblar datos de prueba:
+4. **Cuenta admin personal** (ej. `eduardoluque08@gmail.com`): con `.env.local` configurado, en PowerShell:
+   ```powershell
+   $env:ADMIN_EMAIL="eduardoluque08@gmail.com"; $env:ADMIN_PASSWORD="tu_contraseña"; npm run upsert-admin
+   ```
+   Crea el usuario o lo pasa a rol **admin** (no es “empleado”: en esta app el acceso a `/admin` es solo con `role = admin`).
+
+5. (Opcional) Poblar datos de prueba:
    ```bash
    npm run seed
    ```

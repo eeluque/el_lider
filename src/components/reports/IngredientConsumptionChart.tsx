@@ -11,7 +11,7 @@ export function IngredientConsumptionChart({ data }: { data: { name: string; con
           <XAxis dataKey="name" />
           <YAxis />
           <Tooltip />
-          <Bar dataKey="consumido" fill="hsl(var(--primary))" name="Consumido" />
+          <Bar dataKey="consumido" fill="var(--primary)" name="Consumido" />
         </BarChart>
       </ResponsiveContainer>
     </div>

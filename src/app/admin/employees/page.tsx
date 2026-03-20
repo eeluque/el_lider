@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/db";
 import { EmployeesTable } from "./employees-table";
+import { CreateEmployeeForm } from "./create-employee-form";
 
 export default async function AdminEmployeesPage() {
   const supabase = getSupabaseAdmin();
@@ -12,8 +13,9 @@ export default async function AdminEmployeesPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">Empleados</h1>
-      <p className="mt-1 text-neutral-600">Usuarios admin y empleados.</p>
+      <p className="mt-1 text-muted-foreground">Usuarios admin y empleados. Crea nuevas cuentas de empleado abajo.</p>
       <EmployeesTable users={(users ?? []) as { id: string; email: string; full_name: string | null; role: string; active: boolean; created_at: string }[]} />
+      <CreateEmployeeForm />
     </div>
   );
 }

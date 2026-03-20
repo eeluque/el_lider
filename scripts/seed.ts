@@ -7,7 +7,7 @@
 import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 
-config({ path: ".env.local" });
+config({ path: ".env" });
 import { hash } from "bcryptjs";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;

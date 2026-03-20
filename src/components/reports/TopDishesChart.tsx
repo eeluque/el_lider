@@ -11,7 +11,7 @@ export function TopDishesChart({ data }: { data: { name: string; cantidad: numbe
           <XAxis type="number" />
           <YAxis type="category" dataKey="name" width={80} />
           <Tooltip formatter={(v, n) => [n === "ingresos" && v != null ? `L ${Number(v).toFixed(2)}` : v, n === "ingresos" ? "Ingresos" : "Cantidad"]} />
-          <Bar dataKey="cantidad" fill="hsl(var(--primary))" name="Cantidad" />
+          <Bar dataKey="cantidad" fill="var(--primary)" name="Cantidad" />
         </BarChart>
       </ResponsiveContainer>
     </div>

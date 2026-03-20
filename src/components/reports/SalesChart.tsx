@@ -11,7 +11,7 @@ export function SalesChart({ data }: { data: { name: string; ventas: number }[] 
           <XAxis dataKey="name" />
           <YAxis />
           <Tooltip formatter={(v) => [v != null ? `L ${Number(v).toFixed(2)}` : "", "Ventas"]} />
-          <Bar dataKey="ventas" fill="hsl(var(--primary))" name="Ventas" />
+          <Bar dataKey="ventas" fill="var(--primary)" name="Ventas" />
         </BarChart>
       </ResponsiveContainer>
     </div>
