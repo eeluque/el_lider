@@ -73,7 +73,8 @@ export async function exportToPDF(title: string, rows: ExportRow[], options?: Ex
 export async function exportToExcel(title: string, rows: ExportRow[], options?: ExportFileOptions): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const XLSX = await import("xlsx-js-style") as any;
+    const xlsxMod = await import("xlsx-js-style") as any;
+    const XLSX = xlsxMod.default ?? xlsxMod;
     const headers = Object.keys(rows[0] ?? {});
     const colCount = headers.length;
 
