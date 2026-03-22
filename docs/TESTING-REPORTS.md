@@ -12,7 +12,7 @@
 
 - **`src/services/reports.ts`**: funciones de datos (pedidos entregados, cancelados, kardex, consumo, ventas, top platos, etc.) con **mock de Supabase** (`src/test/vitest-setup.ts` + cola en `src/test/supabase-queue.ts`).
 - **`src/lib/date-range.ts`**: rangos de fechas (hoy, 7 días, semana actual).
-- **`src/lib/export.ts`**: PDF/Excel (jspdf mockeado; Excel usa el paquete real y se espía `writeFile` en el objeto `default`).
+- **`src/lib/export.ts`**: PDF/Excel (jspdf mockeado; Excel usa el paquete real y se espía `writeFile` en el objeto `default`). Con `from`/`to` en opciones, el PDF y la fila 2 del Excel muestran el subtítulo **Periodo: …** (`formatReportPeriodSubtitle`).
 
 **Líneas / sentencias / funciones: 100%** en esos archivos. Las **ramas** (~74% global) incluyen opcionales en export y comparadores de ordenación; el umbral mínimo de ramas está en **70%** en `vitest.config.mjs`.
 

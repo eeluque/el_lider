@@ -32,9 +32,14 @@ export function ReportExportButtons({ title, rows, from, to, className }: Props)
       if (rows.length === 0) {
         throw new Error("No hay datos para exportar en este periodo.");
       }
-      const fileBaseName =
-        from && to ? buildReportFileBaseName(title, from, to) : undefined;
-      const fileOpts = fileBaseName ? { fileBaseName } : undefined;
+      const fileOpts =
+        from && to
+          ? {
+              fileBaseName: buildReportFileBaseName(title, from, to),
+              from,
+              to,
+            }
+          : undefined;
       if (type === "pdf") await exportToPDF(title, rows, fileOpts);
       else await exportToExcel(title, rows, fileOpts);
     } catch (e) {

@@ -24,7 +24,7 @@ vi.mock("jspdf", () => ({
   },
 }));
 
-import { buildReportFileBaseName, exportToExcel, exportToPDF } from "./export";
+import { buildReportFileBaseName, exportToExcel, exportToPDF, formatReportPeriodSubtitle } from "./export";
 
 describe("export", () => {
   afterEach(() => {
@@ -34,6 +34,21 @@ describe("export", () => {
   it("buildReportFileBaseName con un día o rango", () => {
     expect(buildReportFileBaseName("Mi / Reporte", "2025-01-01", "2025-01-01")).toBe("Mi_Reporte_2025-01-01");
     expect(buildReportFileBaseName("Ventas", "2025-01-01", "2025-01-31")).toBe("Ventas_2025-01-01_a_2025-01-31");
+  });
+
+  it("formatReportPeriodSubtitle", () => {
+    expect(formatReportPeriodSubtitle("2025-03-08", "2025-03-08")).toMatch(/^Periodo:/);
+    expect(formatReportPeriodSubtitle("2025-01-01", "2025-01-31")).toContain("–");
+  });
+
+  it("exportToPDF con rango de fechas (subtítulo) no lanza", async () => {
+    mocks.savePdf.mockClear();
+    await exportToPDF("Informe", [{ A: 1 }], {
+      fileBaseName: "Inf",
+      from: "2025-06-01",
+      to: "2025-06-15",
+    });
+    expect(mocks.savePdf).toHaveBeenCalledWith("Inf.pdf");
   });
 
   it("exportToPDF genera archivo con nombre por defecto", async () => {
@@ -74,6 +89,20 @@ describe("export", () => {
     const spy = vi.spyOn(XLSX, "writeFile").mockImplementation(() => {});
     await exportToExcel("Rep", [{ x: 1 }], { fileBaseName: "Rep_2025-01-01_a_2025-01-02" });
     expect(spy).toHaveBeenCalledWith(expect.anything(), "Rep_2025-01-01_a_2025-01-02.xlsx");
+  });
+
+  it("exportToExcel con from/to incluye subtítulo en hoja", async () => {
+    const XLSX = await getXlsxApi();
+    const spy = vi.spyOn(XLSX, "writeFile").mockImplementation(() => {});
+    await exportToExcel("Rep", [{ x: 1 }], {
+      fileBaseName: "R",
+      from: "2025-01-01",
+      to: "2025-01-31",
+    });
+    expect(spy).toHaveBeenCalled();
+    const wb = spy.mock.calls[0][0] as { Sheets?: { [k: string]: { A2?: { v?: string } } } };
+    const sheet = Object.values(wb.Sheets ?? {})[0];
+    expect(sheet?.A2?.v).toContain("Periodo:");
   });
 
   it("exportToExcel falla si writeFile lanza", async () => {
