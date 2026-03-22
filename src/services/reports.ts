@@ -110,11 +110,39 @@ export async function getTopDishes(params: { from: string; to: string }) {
   }
   const menuIds = Object.keys(byItem);
   if (menuIds.length === 0) return [];
-  const { data: names } = await supabase.from("menu_items").select("id, name").in("id", menuIds);
-  const nameMap = Object.fromEntries((names ?? []).map((n) => [n.id, n.name]));
+  const { data: names } = await supabase.from("menu_items").select("id, name, category").in("id", menuIds);
+  const meta = Object.fromEntries((names ?? []).map((n) => [n.id, { name: n.name, category: n.category ?? "—" }]));
   return Object.entries(byItem)
-    .map(([id, v]) => ({ id, name: nameMap[id] ?? id, quantity: v.quantity, revenue: v.revenue }))
+    .map(([id, v]) => ({
+      id,
+      name: meta[id]?.name ?? id,
+      category: meta[id]?.category ?? "—",
+      quantity: v.quantity,
+      revenue: v.revenue,
+    }))
     .sort((a, b) => b.quantity - a.quantity);
+}
+
+/** Kardex con saldo acumulado en el período (desde cero en el rango) */
+export async function getKardexWithBalance(ingredientId: string, from: string, to: string) {
+  const supabase = getSupabaseAdmin();
+  const { data: ing } = await supabase.from("ingredients").select("*").eq("id", ingredientId).single();
+  const { data: movements } = await supabase
+    .from("inventory_movements")
+    .select("*")
+    .eq("ingredient_id", ingredientId)
+    .gte("created_at", from)
+    .lte("created_at", to)
+    .order("created_at", { ascending: true });
+  const rows = movements ?? [];
+  let running = 0;
+  const enriched = rows.map((m) => {
+    const q = Number(m.quantity);
+    if (m.movement_type === "OUT") running -= Math.abs(q);
+    else running += Math.abs(q);
+    return { ...m, balance: running };
+  });
+  return { ingredient: ing, movements: enriched };
 }
 
 /** Ingredient consumption (OUT movements) in period */

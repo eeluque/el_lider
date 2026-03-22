@@ -1,19 +1,15 @@
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
-import Link from "next/link";
+import { AdminTopBar } from "@/components/admin/admin-top-bar";
 
 export const dynamic = "force-dynamic";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen bg-neutral-50">
+    <div className="flex min-h-screen bg-muted/50">
       <AdminSidebar />
-      <div className="flex-1 p-6">
-        <div className="mb-4 flex justify-end">
-          <Link href="/" className="text-sm text-neutral-500 hover:underline">
-            Volver al sitio
-          </Link>
-        </div>
-        {children}
+      <div className="flex min-h-screen flex-1 flex-col">
+        <AdminTopBar />
+        <main className="flex-1 p-4 md:p-6 print:p-4">{children}</main>
       </div>
     </div>
   );

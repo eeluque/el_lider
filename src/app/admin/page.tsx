@@ -1,42 +1,36 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { LayoutDashboard, ShoppingBag, UtensilsCrossed, Package, Users, FileBarChart } from "lucide-react";
+
+const cards = [
+  { href: "/admin/orders", title: "Pedidos de hoy", desc: "Filtrar por estado y ver detalle", icon: ShoppingBag },
+  { href: "/admin/menu", title: "Menú", desc: "Platillos y precios", icon: UtensilsCrossed },
+  { href: "/admin/inventory", title: "Inventario", desc: "Insumos y existencias", icon: Package },
+  { href: "/admin/employees", title: "Empleados", desc: "Cuentas del equipo", icon: Users },
+  { href: "/admin/analytics/sales-summary", title: "Resumen de ventas", desc: "Reportes y gráficos", icon: FileBarChart },
+];
 
 export default function AdminDashboardPage() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Admin</h1>
-      <p className="mt-1 text-neutral-600">Gestión del comedor.</p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Link href="/admin/orders">
-          <div className="rounded-lg border bg-white p-4 shadow-sm hover:bg-neutral-50">
-            <h3 className="font-medium">Pedidos</h3>
-            <p className="text-sm text-neutral-500">Ver y actualizar estado</p>
+    <div className="space-y-6">
+      <div className="rounded-xl bg-primary/15 px-5 py-6 text-primary-foreground">
+        <div className="flex items-center gap-3">
+          <LayoutDashboard className="size-8 text-[rgb(117,59,25)]" />
+          <div>
+            <h1 className="font-serif text-2xl font-bold text-[rgb(117,59,25)]">Dashboard</h1>
+            <p className="text-sm text-[rgb(117,59,25)]/80">Accesos rápidos a la gestión del comedor</p>
           </div>
-        </Link>
-        <Link href="/admin/menu">
-          <div className="rounded-lg border bg-white p-4 shadow-sm hover:bg-neutral-50">
-            <h3 className="font-medium">Menú</h3>
-            <p className="text-sm text-neutral-500">Gestionar platillos</p>
-          </div>
-        </Link>
-        <Link href="/admin/inventory">
-          <div className="rounded-lg border bg-white p-4 shadow-sm hover:bg-neutral-50">
-            <h3 className="font-medium">Inventario</h3>
-            <p className="text-sm text-neutral-500">Ingredientes y movimientos</p>
-          </div>
-        </Link>
-        <Link href="/admin/employees">
-          <div className="rounded-lg border bg-white p-4 shadow-sm hover:bg-neutral-50">
-            <h3 className="font-medium">Empleados</h3>
-            <p className="text-sm text-neutral-500">Usuarios y roles</p>
-          </div>
-        </Link>
-        <Link href="/admin/analytics/sales-summary">
-          <div className="rounded-lg border bg-white p-4 shadow-sm hover:bg-neutral-50">
-            <h3 className="font-medium">Ventas</h3>
-            <p className="text-sm text-neutral-500">Resumen por período</p>
-          </div>
-        </Link>
+        </div>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map(({ href, title, desc, icon: Icon }) => (
+          <Link key={href} href={href} className="group">
+            <div className="h-full rounded-xl border border-primary/20 bg-card p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md">
+              <Icon className="size-8 text-secondary" />
+              <h3 className="mt-3 font-serif text-lg font-semibold text-foreground group-hover:text-secondary">{title}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   );

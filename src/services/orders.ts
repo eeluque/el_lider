@@ -111,6 +111,27 @@ export async function updateOrderStatus(
   if (error) throw error;
 }
 
+/** Pedidos en un rango de fechas con ítems (una consulta) */
+export async function getOrdersWithItemsInRange(from: string, to: string): Promise<OrderWithItems[]> {
+  const supabase = getSupabaseAdmin();
+  const { data: orders, error } = await supabase
+    .from("orders")
+    .select(
+      `
+      *,
+      order_items (
+        *,
+        menu_item:menu_items (id, name, price, category)
+      )
+    `
+    )
+    .gte("created_at", from)
+    .lte("created_at", to)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (orders ?? []) as OrderWithItems[];
+}
+
 /** Pending = not yet delivered/cancelled */
 export async function getPendingOrders(): Promise<OrderWithItems[]> {
   const supabase = getSupabaseAdmin();

@@ -1,5 +1,7 @@
 import { getSalesSummary } from "@/services/reports";
-import { SalesChart } from "@/components/reports/SalesChart";
+import { ReportBanner } from "@/components/admin/report-banner";
+import { ExportToolbar } from "@/components/admin/export-toolbar";
+import { SalesSummaryReport } from "@/components/reports/SalesSummaryReport";
 
 export default async function SalesSummaryPage({
   searchParams,
@@ -15,41 +17,41 @@ export default async function SalesSummaryPage({
     .map(([name, value]) => ({ name, ventas: value }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  const monthLabel = new Date(from + "T12:00:00").toLocaleDateString("es-HN", {
+    month: "long",
+    year: "numeric",
+  });
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Resumen de ventas</h1>
-      <p className="mt-1 text-neutral-600">Total en período: L {total.toFixed(2)}</p>
-      <form className="mt-4 flex flex-wrap gap-2">
-        <input type="date" name="from" defaultValue={from} className="rounded border px-2 py-1" />
-        <input type="date" name="to" defaultValue={to} className="rounded border px-2 py-1" />
-        <select name="groupBy" defaultValue={groupBy} className="rounded border px-2 py-1">
-          <option value="day">Por día</option>
-          <option value="week">Por semana</option>
-          <option value="month">Por mes</option>
-        </select>
-        <button type="submit" className="rounded bg-neutral-800 px-3 py-1 text-white">Actualizar</button>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <ReportBanner title="Resumen de ventas" subtitle={monthLabel} />
+        <ExportToolbar />
+      </div>
+
+      <form className="flex flex-wrap items-end gap-2 rounded-xl border border-primary/10 bg-card p-4">
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">Desde</label>
+          <input type="date" name="from" defaultValue={from} className="rounded-lg border border-input px-2 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">Hasta</label>
+          <input type="date" name="to" defaultValue={to} className="rounded-lg border border-input px-2 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">Agrupar</label>
+          <select name="groupBy" defaultValue={groupBy} className="rounded-lg border border-input px-2 py-2 text-sm">
+            <option value="day">Día</option>
+            <option value="week">Semana</option>
+            <option value="month">Mes</option>
+          </select>
+        </div>
+        <button type="submit" className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground">
+          Actualizar
+        </button>
       </form>
-      <div className="mt-6">
-        <SalesChart data={chartData} />
-      </div>
-      <div className="mt-4 overflow-x-auto rounded-md border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-neutral-50">
-              <th className="p-2 text-left">Período</th>
-              <th className="p-2 text-right">Ventas (L)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {chartData.map((r) => (
-              <tr key={r.name} className="border-b last:border-0">
-                <td className="p-2">{r.name}</td>
-                <td className="p-2 text-right">{r.ventas.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+      <SalesSummaryReport chartData={chartData} total={total} monthLabel={monthLabel} />
     </div>
   );
 }

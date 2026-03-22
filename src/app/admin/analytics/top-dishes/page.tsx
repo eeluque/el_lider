@@ -1,5 +1,7 @@
 import { getTopDishes } from "@/services/reports";
-import { TopDishesChart } from "@/components/reports/TopDishesChart";
+import { ReportBanner } from "@/components/admin/report-banner";
+import { ExportToolbar } from "@/components/admin/export-toolbar";
+import { TopDishesReport } from "@/components/reports/TopDishesReport";
 
 export default async function TopDishesPage({
   searchParams,
@@ -10,40 +12,34 @@ export default async function TopDishesPage({
   const to = params.to ?? new Date().toISOString().slice(0, 10);
   const from = params.from ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const dishes = await getTopDishes({ from, to });
-  const chartData = dishes.slice(0, 10).map((d) => ({ name: d.name, cantidad: d.quantity, ingresos: d.revenue }));
+  const monthLabel = new Date(from + "T12:00:00").toLocaleDateString("es-HN", { month: "long", year: "numeric" });
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Platos más vendidos</h1>
-      <p className="mt-1 text-neutral-600">Por cantidad e ingresos en el período.</p>
-      <form className="mt-4 flex flex-wrap gap-2">
-        <input type="date" name="from" defaultValue={from} className="rounded border px-2 py-1" />
-        <input type="date" name="to" defaultValue={to} className="rounded border px-2 py-1" />
-        <button type="submit" className="rounded bg-neutral-800 px-3 py-1 text-white">Actualizar</button>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <ReportBanner title="Platillos más vendidos" subtitle={`Top 5 · ${monthLabel}`} />
+        <ExportToolbar />
+      </div>
+
+      <form className="flex flex-wrap items-end gap-2 rounded-xl border border-primary/10 bg-card p-4">
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">Desde</label>
+          <input type="date" name="from" defaultValue={from} className="rounded-lg border border-input px-2 py-2 text-sm" />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">Hasta</label>
+          <input type="date" name="to" defaultValue={to} className="rounded-lg border border-input px-2 py-2 text-sm" />
+        </div>
+        <button type="submit" className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground">
+          Actualizar
+        </button>
       </form>
-      <div className="mt-6">
-        <TopDishesChart data={chartData} />
-      </div>
-      <div className="mt-4 overflow-x-auto rounded-md border">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-neutral-50">
-              <th className="p-2 text-left">Plato</th>
-              <th className="p-2 text-right">Unidades</th>
-              <th className="p-2 text-right">Ingresos (L)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {dishes.map((d) => (
-              <tr key={d.id} className="border-b last:border-0">
-                <td className="p-2">{d.name}</td>
-                <td className="p-2 text-right">{d.quantity}</td>
-                <td className="p-2 text-right">{d.revenue.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+      {dishes.length === 0 ? (
+        <p className="text-center text-muted-foreground">No hay ventas en el periodo seleccionado.</p>
+      ) : (
+        <TopDishesReport dishes={dishes} />
+      )}
     </div>
   );
 }
