@@ -129,7 +129,7 @@ export async function getKardexWithBalance(ingredientId: string, from: string, t
   const { data: ing } = await supabase.from("ingredients").select("*").eq("id", ingredientId).single();
   const { data: movements } = await supabase
     .from("inventory_movements")
-    .select("*")
+    .select("*, responsible:users(full_name)")
     .eq("ingredient_id", ingredientId)
     .gte("created_at", from)
     .lte("created_at", to)
