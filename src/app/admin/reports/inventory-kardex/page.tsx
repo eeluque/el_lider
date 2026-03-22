@@ -1,8 +1,8 @@
-import { getKardexWithBalance } from "@/services/reports";
+import { getInventoryKardex } from "@/services/reports";
 import { getIngredients } from "@/services/inventory";
-import { getUsers } from "@/services/users";
-
-import ExportButtons from "@/components/ui/exportButtons";
+import { defaultReportRange } from "@/lib/date-range";
+import { ReportExportButtons } from "@/components/admin/report-export-buttons";
+import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -49,20 +49,17 @@ export default async function InventoryKardexPage({
   searchParams: Promise<{ from?: string; to?: string; ingredientId?: string }>;
 }) {
   const params = await searchParams;
-
-  const from =
-    params.from ??
-    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const to = params.to ?? new Date().toISOString().slice(0, 10);
+  const dr = defaultReportRange();
+  const from = params.from ?? dr.from;
+  const to = params.to ?? dr.to;
 
   const [movements, ingredients] = await Promise.all([
     getInventoryKardex({
-      from: from + "T00:00:00",
-      to: to + "T23:59:59",
+      from,
+      to,
       ingredientId: params.ingredientId || undefined,
     }),
     getIngredients(true),
-    getUsers(true),
   ]);
 
   // Derive the ingredient label shown in the card header
@@ -72,11 +69,13 @@ export default async function InventoryKardexPage({
   const ingredientLabel = selectedIngredient?.name ?? "Todos los ingredientes";
   const ingredientUnit = selectedIngredient?.unit ?? "";
 
-  // Calculate running stock & final stock
+  // API devuelve movimientos más recientes primero; el saldo va en orden cronológico
+  const chronological = [...(movements as Movement[])].sort(
+    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
+
   let runningStock = 0;
-  const rows: (Movement & { runningStock: number })[] = (
-    movements as Movement[]
-  ).map((m) => {
+  const rows: (Movement & { runningStock: number })[] = chronological.map((m) => {
     const qty = Number(m.quantity);
     if (m.movement_type.toUpperCase() === "IN") {
       runningStock += qty;
@@ -269,13 +268,7 @@ export default async function InventoryKardexPage({
       <div className="kardex-root" style={{ maxWidth: 960, margin: "0 auto", padding: "0 16px 40px" }}>
         {/* ── Export Buttons ── */}
         <div style={{ display: "flex", justifyContent: "flex-end", margin: "24px 0 -16px" }}>
-          <ExportButtons
-            title="Kárdex de Movimientos de Insumos"
-            rows={exportRows}
-            ingredientLabel={ingredientLabel}
-            ingredientUnit={ingredientUnit}
-            currentStock={currentStock}
-          />
+          <ReportExportButtons title="Kárdex de Movimientos de Insumos" rows={exportRows} from={from} to={to} />
         </div>
 
         {/* ── Page header ── */}
@@ -289,14 +282,18 @@ export default async function InventoryKardexPage({
         </div>
         <div style={{ borderTop: "3.5px solid #F1B53E", margin: "8px 0 0 0" }} />
 
-        {/* ── Filters ── */}
-        <form className="kardex-filter" method="get">
-          <label htmlFor="k-from">Periodo:</label>
-          <input id="k-from" type="date" name="from" defaultValue={from} />
-          <span style={{ color: "#999", fontSize: 13 }}>—</span>
-          <input type="date" name="to" defaultValue={to} />
-
-          <label htmlFor="k-ing" style={{ marginLeft: 12 }}>Ingrediente:</label>
+        {/* ── Filtros de tiempo + ingrediente ── */}
+        <ReportDateRangeFiltersSuspense
+          from={from}
+          to={to}
+          variant="kardex"
+          formFieldNames={["ingredientId"]}
+          submitLabel="Filtrar"
+          className="kardex-filter-wrap"
+        >
+          <label htmlFor="k-ing" style={{ marginLeft: 12, fontWeight: 600, fontSize: 14, color: "#1a1a1a" }}>
+            Ingrediente:
+          </label>
           <select id="k-ing" name="ingredientId" defaultValue={params.ingredientId ?? ""}>
             <option value="">Todos</option>
             {(ingredients as { id: string; name: string }[]).map((i) => (
@@ -305,9 +302,7 @@ export default async function InventoryKardexPage({
               </option>
             ))}
           </select>
-
-          <button type="submit" className="kardex-btn">Filtrar</button>
-        </form>
+        </ReportDateRangeFiltersSuspense>
 
         {/* ── Ingredient card header ── */}
         <div className="kardex-card">

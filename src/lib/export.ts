@@ -3,7 +3,27 @@ import autoTable from "jspdf-autotable";
 
 type ExportRow = Record<string, string | number | null | undefined>;
 
-export async function exportToPDF(title: string, rows: ExportRow[]): Promise<void> {
+/** Nombre seguro para archivo (sin extensión): título + rango YYYY-MM-DD. */
+export function buildReportFileBaseName(title: string, from: string, to: string): string {
+  const safe = title
+    .replace(/[/\\?%*:|"<>[\]]/g, "")
+    .trim()
+    .replace(/\s+/g, "_");
+  const range = from === to ? from : `${from}_a_${to}`;
+  return `${safe}_${range}`;
+}
+
+function sanitizeTitleFallback(title: string): string {
+  const s = title.replace(/[/\\?%*:|"<>[\]]/g, "").trim().replace(/\s+/g, "_");
+  return s || "reporte";
+}
+
+export type ExportFileOptions = {
+  /** Sin extensión; si no se envía, se usa el título sanitizado. */
+  fileBaseName?: string;
+};
+
+export async function exportToPDF(title: string, rows: ExportRow[], options?: ExportFileOptions): Promise<void> {
   try {
     const headers = Object.keys(rows[0] ?? {});
     const doc = new jsPDF({ orientation: "landscape" });
@@ -41,15 +61,16 @@ export async function exportToPDF(title: string, rows: ExportRow[]): Promise<voi
       tableLineWidth: 0.3,
     });
 
-    
-    doc.save(`${title}.pdf`);
+
+    const fileBase = options?.fileBaseName ?? sanitizeTitleFallback(title);
+    doc.save(`${fileBase}.pdf`);
   } catch (error) {
     console.error("Error al exportar PDF:", error);
     throw new Error("No se pudo generar el PDF. Intenta de nuevo.");
   }
 }
 
-export async function exportToExcel(title: string, rows: ExportRow[]): Promise<void> {
+export async function exportToExcel(title: string, rows: ExportRow[], options?: ExportFileOptions): Promise<void> {
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const XLSX = await import("xlsx-js-style") as any;
@@ -99,8 +120,10 @@ export async function exportToExcel(title: string, rows: ExportRow[]): Promise<v
     ws["!cols"] = headers.map(() => ({ wch: 18 }));
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, title.slice(0, 31));
-    XLSX.writeFile(wb, `${title}.xlsx`);
+    const sheetName = sanitizeTitleFallback(title).slice(0, 31) || "Hoja1";
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    const fileBase = options?.fileBaseName ?? sanitizeTitleFallback(title);
+    XLSX.writeFile(wb, `${fileBase}.xlsx`);
   } catch (error) {
     console.error("Error al exportar Excel:", error);
     throw new Error("No se pudo generar el Excel. Intenta de nuevo.");

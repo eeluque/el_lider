@@ -1,39 +1,61 @@
-import { getDeliveredOrdersDaily } from "@/services/reports";
+import { getDeliveredOrdersInRange } from "@/services/reports";
+import { defaultReportRange } from "@/lib/date-range";
 import { ReportBanner } from "@/components/admin/report-banner";
-import { ExportToolbar } from "@/components/admin/export-toolbar";
+import { ReportExportButtons } from "@/components/admin/report-export-buttons";
+import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default async function DeliveredOrdersDailyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const params = await searchParams;
-  const date = params.date ?? new Date().toISOString().slice(0, 10);
-  const orders = await getDeliveredOrdersDaily(date);
-  const label = new Date(date + "T12:00:00").toLocaleDateString("es-HN", {
-    weekday: "long",
+  const dr = defaultReportRange();
+  const from = params.from ?? dr.from;
+  const to = params.to ?? dr.to;
+
+  const orders = await getDeliveredOrdersInRange(from, to);
+  const periodLabel = `${new Date(from + "T12:00:00").toLocaleDateString("es-HN", {
     day: "numeric",
     month: "long",
     year: "numeric",
-  });
+  })} – ${new Date(to + "T12:00:00").toLocaleDateString("es-HN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  })}`;
+
+  const exportRows = (
+    orders as {
+      order_number: string;
+      created_at: string;
+      customer_name: string;
+      total_price: number;
+      order_items?: { quantity: number; menu_item?: { name: string } }[];
+    }[]
+  ).map((o) => ({
+    Pedido: o.order_number,
+    Fecha: new Date(o.created_at).toLocaleString("es-HN"),
+    Cliente: o.customer_name,
+    Detalle:
+      o.order_items?.map((i) => `×${i.quantity} ${i.menu_item?.name ?? "—"}`).join("; ") ?? "—",
+    Total: `L. ${Number(o.total_price).toFixed(2)}`,
+  }));
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <ReportBanner title="Pedidos entregados del día" subtitle={label} />
-        <ExportToolbar />
+        <ReportBanner title="Pedidos entregados" subtitle={periodLabel} />
+        <ReportExportButtons title="Pedidos entregados" rows={exportRows} from={from} to={to} />
       </div>
 
-      <form className="flex flex-wrap items-end gap-2">
-        <input type="date" name="date" defaultValue={date} className="rounded-lg border border-input px-2 py-2 text-sm" />
-        <button type="submit" className="rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground">
-          Ver fecha
-        </button>
-      </form>
+      <div className="rounded-xl border border-primary/10 bg-card p-4">
+        <ReportDateRangeFiltersSuspense from={from} to={to} submitLabel="Actualizar" />
+      </div>
 
       {orders.length === 0 ? (
-        <p className="text-center text-muted-foreground">No hay pedidos entregados en esta fecha.</p>
+        <p className="text-center text-muted-foreground">No hay pedidos entregados en este periodo.</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {(orders as { id: string; order_number: string; customer_name: string; total_price: number; created_at: string; order_items?: { quantity: number; menu_item?: { name: string } }[] }[]).map((o) => (

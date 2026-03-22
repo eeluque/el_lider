@@ -1,10 +1,16 @@
 import { getSupabaseAdmin } from "@/lib/db";
 
-/** Delivered orders for a given day (date string YYYY-MM-DD) */
-export async function getDeliveredOrdersDaily(date: string) {
+function toDayBounds(from: string, to: string) {
+  const f = from.length <= 10 ? `${from}T00:00:00` : from;
+  const t = to.length <= 10 ? `${to}T23:59:59` : to;
+  return { fromIso: f, toIso: t };
+}
+
+/** Pedidos entregados en un rango de fechas (YYYY-MM-DD), inclusive. */
+export async function getDeliveredOrdersInRange(fromDate: string, toDate: string) {
   const supabase = getSupabaseAdmin();
-  const from = `${date}T00:00:00`;
-  const to = `${date}T23:59:59`;
+  const from = `${fromDate}T00:00:00`;
+  const to = `${toDate}T23:59:59`;
   const { data } = await supabase
     .from("orders")
     .select("*, order_items(*, menu_item:menu_items(name))")
@@ -15,6 +21,11 @@ export async function getDeliveredOrdersDaily(date: string) {
   return data ?? [];
 }
 
+/** Un solo día (compatibilidad). */
+export async function getDeliveredOrdersDaily(date: string) {
+  return getDeliveredOrdersInRange(date, date);
+}
+
 /** Inventory movements with optional filters */
 export async function getInventoryKardex(params: { ingredientId?: string; from?: string; to?: string }) {
   const supabase = getSupabaseAdmin();
@@ -23,8 +34,10 @@ export async function getInventoryKardex(params: { ingredientId?: string; from?:
     .select("*, ingredient:ingredients(name), responsible:users(id, full_name)")
     .order("created_at", { ascending: false });
   if (params.ingredientId) q = q.eq("ingredient_id", params.ingredientId);
-  if (params.from) q = q.gte("created_at", params.from);
-  if (params.to) q = q.lte("created_at", params.to);
+  if (params.from && params.to) {
+    const { fromIso, toIso } = toDayBounds(params.from.slice(0, 10), params.to.slice(0, 10));
+    q = q.gte("created_at", fromIso).lte("created_at", toIso);
+  }
   const { data } = await q;
   return data ?? [];
 }
@@ -49,8 +62,10 @@ export async function getCancelledOrders(params: { from?: string; to?: string; r
     .select("*, order_items(*, menu_item:menu_items(name))")
     .eq("status", "cancelled")
     .order("created_at", { ascending: false });
-  if (params.from) q = q.gte("created_at", params.from);
-  if (params.to) q = q.lte("created_at", params.to);
+  if (params.from && params.to) {
+    const { fromIso, toIso } = toDayBounds(params.from, params.to);
+    q = q.gte("created_at", fromIso).lte("created_at", toIso);
+  }
   if (params.reason) q = q.ilike("cancellation_reason", `%${params.reason}%`);
   const { data } = await q;
   return data ?? [];
@@ -59,12 +74,13 @@ export async function getCancelledOrders(params: { from?: string; to?: string; r
 /** Sales totals by day for a range */
 export async function getSalesSummary(params: { from: string; to: string; groupBy: "day" | "week" | "month" }) {
   const supabase = getSupabaseAdmin();
+  const { fromIso, toIso } = toDayBounds(params.from, params.to);
   const { data } = await supabase
     .from("orders")
     .select("created_at, total_price, status")
     .in("status", ["delivered", "ready"])
-    .gte("created_at", params.from)
-    .lte("created_at", params.to)
+    .gte("created_at", fromIso)
+    .lte("created_at", toIso)
     .order("created_at");
   const rows = (data ?? []) as { created_at: string; total_price: number; status: string }[];
   const delivered = rows.filter((r) => r.status === "delivered" || r.status === "ready");
@@ -89,12 +105,13 @@ function getWeekKey(d: Date) {
 /** Top dishes by quantity sold in a period */
 export async function getTopDishes(params: { from: string; to: string }) {
   const supabase = getSupabaseAdmin();
+  const { fromIso, toIso } = toDayBounds(params.from, params.to);
   const { data: orders } = await supabase
     .from("orders")
     .select("id")
     .in("status", ["delivered", "ready"])
-    .gte("created_at", params.from)
-    .lte("created_at", params.to);
+    .gte("created_at", fromIso)
+    .lte("created_at", toIso);
   const orderIds = (orders ?? []).map((o) => o.id);
   if (orderIds.length === 0) return [];
   const { data: items } = await supabase
@@ -148,12 +165,13 @@ export async function getKardexWithBalance(ingredientId: string, from: string, t
 /** Ingredient consumption (OUT movements) in period */
 export async function getIngredientConsumption(params: { from: string; to: string }) {
   const supabase = getSupabaseAdmin();
+  const { fromIso, toIso } = toDayBounds(params.from, params.to);
   const { data } = await supabase
     .from("inventory_movements")
     .select("*, ingredient:ingredients(name)")
     .eq("movement_type", "OUT")
-    .gte("created_at", params.from)
-    .lte("created_at", params.to)
+    .gte("created_at", fromIso)
+    .lte("created_at", toIso)
     .order("created_at");
   const rows = (data ?? []) as { ingredient_id: string; quantity: number; created_at: string; ingredient?: { name: string } }[];
   const byIngredient: Record<string, { name: string; total: number }> = {};

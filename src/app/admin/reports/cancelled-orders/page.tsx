@@ -1,9 +1,10 @@
 import { getCancelledOrders } from "@/services/reports";
+import { defaultReportRange } from "@/lib/date-range";
 import { ReportBanner } from "@/components/admin/report-banner";
-import { ExportToolbar } from "@/components/admin/export-toolbar";
+import { ReportExportButtons } from "@/components/admin/report-export-buttons";
+import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 function computeInsights(
   orders: {
@@ -29,7 +30,9 @@ function computeInsights(
   return {
     total,
     impact,
-    topReason: topReason ? { text: topReason[0], count: topReason[1], pct: total ? Math.round((topReason[1] / total) * 100) : 0 } : null,
+    topReason: topReason
+      ? { text: topReason[0], count: topReason[1], pct: total ? Math.round((topReason[1] / total) * 100) : 0 }
+      : null,
     topDish: topDish ? { name: topDish[0], count: topDish[1], pct: total ? Math.round((topDish[1] / total) * 100) : 0 } : null,
   };
 }
@@ -40,14 +43,35 @@ export default async function CancelledOrdersPage({
   searchParams: Promise<{ from?: string; to?: string; reason?: string }>;
 }) {
   const params = await searchParams;
-  const from = params.from ? params.from + "T00:00:00" : undefined;
-  const to = params.to ? params.to + "T23:59:59" : undefined;
-  const orders = await getCancelledOrders({ from, to, reason: params.reason });
+  const dr = defaultReportRange();
+  const from = params.from ?? dr.from;
+  const to = params.to ?? dr.to;
+
+  const orders = await getCancelledOrders({
+    from,
+    to,
+    reason: params.reason,
+  });
   const insights = computeInsights(orders as Parameters<typeof computeInsights>[0]);
-  const periodLabel =
-    params.from && params.to
-      ? `${params.from} – ${params.to}`
-      : "Todos los registros";
+  const periodLabel = `${from} – ${to}`;
+
+  const exportRows = (
+    orders as {
+      order_number: string;
+      created_at: string;
+      customer_name: string;
+      cancellation_reason: string | null;
+      total_price: number;
+      order_items?: { menu_item?: { name: string } }[];
+    }[]
+  ).map((o) => ({
+    Pedido: o.order_number,
+    Fecha: new Date(o.created_at).toLocaleString("es-HN"),
+    Cliente: o.customer_name,
+    Platillos: o.order_items?.map((i) => i.menu_item?.name).filter(Boolean).join(", ") ?? "—",
+    Motivo: o.cancellation_reason ?? "—",
+    Importe: `L. ${Number(o.total_price).toFixed(2)}`,
+  }));
 
   return (
     <div className="space-y-6 print:space-y-4">
@@ -62,7 +86,7 @@ export default async function CancelledOrdersPage({
             </div>
           }
         />
-        <ExportToolbar />
+        <ReportExportButtons title="Reporte de pedidos cancelados" rows={exportRows} from={from} to={to} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -71,9 +95,7 @@ export default async function CancelledOrdersPage({
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Motivo principal</p>
           </CardHeader>
           <CardContent>
-            <p className="font-serif text-lg font-semibold text-foreground">
-              {insights.topReason?.text ?? "—"}
-            </p>
+            <p className="font-serif text-lg font-semibold text-foreground">{insights.topReason?.text ?? "—"}</p>
             {insights.topReason && (
               <p className="mt-1 text-sm text-muted-foreground">
                 {insights.topReason.count} cancelaciones ({insights.topReason.pct}%)
@@ -100,27 +122,22 @@ export default async function CancelledOrdersPage({
         <CardHeader>
           <p className="text-sm font-semibold uppercase tracking-wide text-[rgb(117,59,25)]">Filtrar cancelaciones</p>
         </CardHeader>
-        <CardContent>
-          <form className="flex flex-wrap items-end gap-3">
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Desde</label>
-              <input type="date" name="from" defaultValue={params.from} className="rounded-lg border border-input bg-background px-2 py-2 text-sm" />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Hasta</label>
-              <input type="date" name="to" defaultValue={params.to} className="rounded-lg border border-input bg-background px-2 py-2 text-sm" />
-            </div>
+        <CardContent className="space-y-4">
+          <ReportDateRangeFiltersSuspense from={from} to={to} formFieldNames={["reason"]} submitLabel="Filtrar">
             <div>
               <label className="mb-1 block text-xs text-muted-foreground">Motivo</label>
-              <input type="text" name="reason" placeholder="Todos" defaultValue={params.reason} className="rounded-lg border border-input bg-background px-2 py-2 text-sm" />
+              <input
+                type="text"
+                name="reason"
+                placeholder="Todos"
+                defaultValue={params.reason}
+                className="rounded-lg border border-input bg-background px-2 py-2 text-sm"
+              />
             </div>
-            <Button type="submit" variant="secondary">
-              Filtrar
-            </Button>
-            <a href="/admin/reports/cancelled-orders" className="text-sm text-secondary underline">
-              Limpiar
-            </a>
-          </form>
+          </ReportDateRangeFiltersSuspense>
+          <a href="/admin/reports/cancelled-orders" className="text-sm text-secondary underline">
+            Limpiar filtros
+          </a>
         </CardContent>
       </Card>
 
@@ -153,9 +170,7 @@ export default async function CancelledOrdersPage({
                 }) => (
                   <tr key={o.id} className="border-b border-border/60 last:border-0 odd:bg-muted/30">
                     <td className="p-3 font-mono text-xs">{o.order_number}</td>
-                    <td className="p-3 whitespace-nowrap text-muted-foreground">
-                      {new Date(o.created_at).toLocaleString("es-HN")}
-                    </td>
+                    <td className="p-3 whitespace-nowrap text-muted-foreground">{new Date(o.created_at).toLocaleString("es-HN")}</td>
                     <td className="p-3">{o.customer_name}</td>
                     <td className="max-w-[200px] p-3 text-xs text-muted-foreground">
                       {o.order_items?.map((i) => (i as { menu_item?: { name: string } }).menu_item?.name).filter(Boolean).join(", ") || "—"}

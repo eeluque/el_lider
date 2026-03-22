@@ -26,7 +26,7 @@ const reports: NavItem[] = [
   { href: "/admin/reports/cancelled-orders", label: "Pedidos cancelados", icon: FileBarChart },
   { href: "/admin/reports/inventory-kardex", label: "Kardex", icon: FileBarChart },
   { href: "/admin/reports/critical-stock", label: "Lista de insumos", icon: FileBarChart },
-  { href: "/admin/reports/delivered-orders-daily", label: "Entregados del día", icon: FileBarChart },
+  { href: "/admin/reports/delivered-orders-daily", label: "Pedidos entregados", icon: FileBarChart },
 ];
 
 function NavBlock({ title, items }: { title: string; items: NavItem[] }) {
