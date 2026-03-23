@@ -5,6 +5,7 @@ import { ReportExportButtons } from "@/components/admin/report-export-buttons";
 import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { InsightCard } from "@/components/admin/insight-card";
 
 function computeInsights(
   orders: {
@@ -73,6 +74,16 @@ export default async function CancelledOrdersPage({
     Importe: `L. ${Number(o.total_price).toFixed(2)}`,
   }));
 
+  // íconos extraídos como constantes
+const ClockIcon = (
+  <img src="/icons/hourglass.png" alt="platillo" width={28} height={28} />
+);
+
+
+const DishIcon = (
+  <img src="/icons/dish.png" alt="platillo" width={28} height={28} />
+);
+
   return (
     <div className="space-y-6 print:space-y-4">
       <div>
@@ -129,34 +140,20 @@ export default async function CancelledOrdersPage({
   {/* ── Línea dorada ── */}
   <div style={{ borderTop: "15px solid #F1B53E", margin: "0px 0 0 0" }} />
 </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-primary/20 shadow-sm">
-          <CardHeader className="pb-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Motivo principal</p>
-          </CardHeader>
-          <CardContent>
-            <p className="font-serif text-lg font-semibold text-foreground">{insights.topReason?.text ?? "—"}</p>
-            {insights.topReason && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {insights.topReason.count} cancelaciones ({insights.topReason.pct}%)
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="border-primary/20 shadow-sm">
-          <CardHeader className="pb-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Platillo más afectado</p>
-          </CardHeader>
-          <CardContent>
-            <p className="font-serif text-lg font-semibold text-foreground">{insights.topDish?.name ?? "—"}</p>
-            {insights.topDish && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {insights.topDish.count} líneas ({insights.topDish.pct}%)
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <div className="flex gap-4">
+  <InsightCard
+    label="Motivo principal"
+    value={insights.topReason?.text ?? "—"}
+    subtext={insights.topReason ? `${insights.topReason.count} cancelaciones (${insights.topReason.pct}%)` : undefined}
+    icon={ClockIcon}
+  />
+  <InsightCard
+    label="Platillo más afectado"
+    value={insights.topDish?.name ?? "—"}
+    subtext={insights.topDish ? `${insights.topDish.count} líneas (${insights.topDish.pct}%)` : undefined}
+    icon={DishIcon}
+  />
+</div>
 
       <Card className="border-primary/15">
         <CardHeader>
