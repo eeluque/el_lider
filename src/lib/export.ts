@@ -34,6 +34,8 @@ export type ExportFileOptions = {
   /** YYYY-MM-DD — muestra subtítulo con el rango del reporte en PDF y Excel. */
   from?: string;
   to?: string;
+  ingredientLabel?: string;  
+  ingredientUnit?: string;   
 };
 
 export async function exportToPDF(title: string, rows: ExportRow[], options?: ExportFileOptions): Promise<void> {
@@ -44,47 +46,88 @@ export async function exportToPDF(title: string, rows: ExportRow[], options?: Ex
     const pageHeight = doc.internal.pageSize.getHeight();
 
     const periodSubtitle =
-      options?.from && options?.to ? formatReportPeriodSubtitle(options.from, options.to) : null;
-    const headerBottom = periodSubtitle ? 36 : 28;
+  options?.from && options?.to ? formatReportPeriodSubtitle(options.from, options.to) : null;
+const hasIngredient = !!options?.ingredientLabel;
+const headerBottom = periodSubtitle ? 36 : 28;
+const cardBottom = hasIngredient ? headerBottom + 14 : headerBottom;
 
-    doc.setFillColor(241, 181, 62);
-    doc.rect(0, 0, pageWidth, headerBottom, "F");
+doc.setFillColor(241, 181, 62);
+doc.rect(0, 0, pageWidth, headerBottom, "F");
 
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.setTextColor(0, 0, 0);
-    doc.text(title, pageWidth / 2, 12, { align: "center" });
+doc.setFont("helvetica", "bold");
+doc.setFontSize(16);
+doc.setTextColor(0, 0, 0);
+doc.text(title, pageWidth / 2, 12, { align: "center" });
 
-    if (periodSubtitle) {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(80, 50, 30);
-      doc.text(periodSubtitle, pageWidth / 2, 22, { align: "center" });
+if (periodSubtitle) {
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(80, 50, 30);
+  doc.text(periodSubtitle, pageWidth / 2, 22, { align: "center" });
+}
+
+// ── Card café con ingrediente ──
+if (hasIngredient) {
+  doc.setFillColor(117, 59, 25); // #753B19
+  doc.rect(0, headerBottom, pageWidth, 14, "F"); // sin +3
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(11);
+  doc.setTextColor(255, 255, 255);
+  doc.text(options!.ingredientLabel!, 10, headerBottom + 9);
+
+  if (options?.ingredientUnit) {
+    const nameWidth = doc.getTextWidth(options.ingredientLabel!);
+    // Badge con relleno gris #D9D9D9 al 50%
+    doc.setFillColor(217, 217, 217);
+    doc.setGState(new (doc as any).GState({ opacity: 0.5 }));
+    doc.roundedRect(14 + nameWidth, headerBottom + 4, doc.getTextWidth(options.ingredientUnit) + 8, 7, 2, 2, "F");
+    doc.setGState(new (doc as any).GState({ opacity: 1 }));
+    doc.setFontSize(8);
+    doc.setTextColor(217, 217, 217);
+    doc.text(options.ingredientUnit, 18 + nameWidth, headerBottom + 9);
+  }
+}
+
+    doc.setDrawColor(209, 140, 30);
+    doc.setLineWidth(1);
+    doc.line(0, cardBottom, pageWidth, cardBottom);
+
+    autoTable(doc, {
+  head: [headers.map((h) => h.toUpperCase())],
+  body: rows.map((r) => headers.map((h) => r[h] ?? "")),
+  startY: cardBottom + 4,
+  styles: { font: "helvetica", fontSize: 9, cellPadding: 4, textColor: [42, 31, 15] },
+  headStyles: { fillColor: [241, 181, 62], textColor: [107, 80, 48], fontStyle: "bold", fontSize: 8, halign: "center" },
+  alternateRowStyles: { fillColor: [255, 250, 243] },
+  tableLineColor: [232, 213, 176],
+  tableLineWidth: 0.3,
+  columnStyles: {
+    // Alinear a la derecha columnas numéricas por índice
+    [headers.indexOf("Entrada")]: { halign: "right" },
+    [headers.indexOf("Salida")]:  { halign: "right" },
+    [headers.indexOf("Stock")]:   { halign: "right" },
+  },
+  didParseCell: (data) => {
+    if (data.section !== "body") return;
+    const colName = headers[data.column.index];
+    const val = String(data.cell.raw ?? "");
+    if (colName === "Entrada" && val !== "—" && val !== "") {
+      data.cell.styles.textColor = [88, 143, 61];   // #588F3D
     }
+    if (colName === "Salida" && val !== "—" && val !== "") {
+      data.cell.styles.textColor = [205, 102, 51];  // #CD6633
+    }
+  },
+});
 
     const fecha = new Date().toLocaleDateString("es-HN", {
-      day: "2-digit", month: "long", year: "numeric",
+        day: "2-digit", month: "long", year: "numeric",
     });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
     doc.text(`Generado el ${fecha}`, pageWidth - 10, pageHeight - 6, { align: "right" });
-
-    doc.setDrawColor(209, 140, 30);
-    doc.setLineWidth(1);
-    doc.line(0, headerBottom, pageWidth, headerBottom);
-
-    autoTable(doc, {
-      head: [headers],
-      body: rows.map((r) => headers.map((h) => r[h] ?? "")),
-      startY: headerBottom + 4,
-      styles: { font: "helvetica", fontSize: 9, cellPadding: 4, textColor: [42, 31, 15] },
-      headStyles: { fillColor: [241, 181, 62], textColor: [107, 80, 48], fontStyle: "bold", fontSize: 8 },
-      alternateRowStyles: { fillColor: [255, 250, 243] },
-      tableLineColor: [232, 213, 176],
-      tableLineWidth: 0.3,
-    });
-
 
     const fileBase = options?.fileBaseName ?? sanitizeTitleFallback(title);
     doc.save(`${fileBase}.pdf`);

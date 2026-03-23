@@ -30,9 +30,11 @@ export default async function TopDishesPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <ReportBanner title="Platillos más vendidos" subtitle={`Top · ${monthLabel}`} />
-        <ReportExportButtons title="Platillos más vendidos" rows={exportRows} from={from} to={to} />
+      <div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+            <ReportExportButtons title="Platillos más Vendidos" rows={exportRows} from={from} to={to} />
+          </div>
+          <ReportBanner title="Platillos más Vendidos" subtitle={monthLabel} />
       </div>
 
       <div className="rounded-xl border border-primary/10 bg-card p-4">

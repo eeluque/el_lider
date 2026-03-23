@@ -58,9 +58,11 @@ export default async function DeliveredOrdersDailyPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <ReportBanner title="Pedidos entregados" subtitle={periodLabel} />
-        <ReportExportButtons title="Pedidos entregados" rows={exportRows} from={from} to={to} />
+      <div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+            <ReportExportButtons title="Pedidos Entregados" rows={exportRows} from={from} to={to} />
+          </div>
+          <ReportBanner title="Pedidos Entregados" subtitle={periodLabel} />
       </div>
 
       <div className="rounded-xl border border-primary/10 bg-card p-4">

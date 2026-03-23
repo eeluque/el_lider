@@ -40,10 +40,12 @@ export default async function SalesSummaryPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <ReportBanner title="Resumen de ventas" subtitle={monthLabel} />
-        <ReportExportButtons title="Resumen de ventas" rows={exportRows} from={from} to={to} />
-      </div>
+        <div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+            <ReportExportButtons title="Resumen de Ventas" rows={exportRows} from={from} to={to} />
+          </div>
+          <ReportBanner title="Resumen de Ventas" subtitle={monthLabel} />
+        </div>
 
       <div className="rounded-xl border border-primary/10 bg-card p-4">
         <ReportDateRangeFiltersSuspense from={from} to={to} formFieldNames={["groupBy"]} submitLabel="Actualizar">

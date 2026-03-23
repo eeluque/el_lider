@@ -92,7 +92,7 @@ export default async function InventoryKardexPage({
     Tipo: m.movement_type === "IN" ? "Entrada" : "Salida",
     Detalle: m.reason ?? "",
     Entrada: m.movement_type === "IN" ? `+${m.quantity}` : "—",
-    Salida: m.movement_type === "OUT" ? `-${m.quantity}` : "—",
+    Salida: m.movement_type === "OUT" || m.movement_type === "ADJUSTMENT" ? `-${m.quantity}` : "—",
     Stock: m.runningStock,
     Responsable: m.responsible?.full_name ?? "",
     Observaciones: m.notes ?? "",
@@ -268,7 +268,8 @@ export default async function InventoryKardexPage({
       <div className="kardex-root" style={{ maxWidth: 960, margin: "0 auto", padding: "0 16px 40px" }}>
         {/* ── Export Buttons ── */}
         <div style={{ display: "flex", justifyContent: "flex-end", margin: "24px 0 -16px" }}>
-          <ReportExportButtons title="Kárdex de Movimientos de Insumos" rows={exportRows} from={from} to={to} />
+          <ReportExportButtons title="Kárdex de Movimientos de Insumos" rows={exportRows} from={from} to={to} ingredientLabel={ingredientLabel}
+  ingredientUnit={ingredientUnit} />
         </div>
 
         {/* ── Page header ── */}

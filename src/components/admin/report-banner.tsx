@@ -12,14 +12,36 @@ export function ReportBanner({
   className?: string;
 }) {
   return (
-    <div
-      className={`flex flex-col gap-1 rounded-xl bg-primary px-5 py-4 text-primary-foreground shadow-sm sm:flex-row sm:items-center sm:justify-between ${className ?? ""}`}
-    >
-      <div>
-        <h1 className="font-serif text-xl font-semibold tracking-tight md:text-2xl">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm opacity-90">{subtitle}</p>}
+    <div className={className} style={{ width: "100%" }}>
+      {/* ── Cuadrado dorado ── */}
+      <div
+        style={{
+          background: "#eeba54",
+          padding: "18px 24px 14px",
+          textAlign: "center",
+        }}
+      >
+        <h1
+          style={{
+            color: "#000000",
+            fontWeight: 700,
+            fontSize: 22,
+            margin: 0,
+            fontFamily: "'Playfair Display', serif",
+          }}
+        >
+          {title}
+        </h1>
+        {subtitle && (
+          <p style={{ color: "#6F6868", fontSize: 13, margin: "6px 0 0", fontWeight: 400 }}>
+            {subtitle}
+          </p>
+        )}
+        {right && <div style={{ marginTop: 8 }}>{right}</div>}
       </div>
-      {right && <div className="shrink-0">{right}</div>}
+
+      {/* ── Línea dorada ── */}
+      <div style={{ borderTop: "3.5px solid #F1B53E", margin: "8px 0 0 0" }} />
     </div>
   );
 }

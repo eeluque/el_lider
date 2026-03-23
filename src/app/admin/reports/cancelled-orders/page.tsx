@@ -5,6 +5,7 @@ import { ReportExportButtons } from "@/components/admin/report-export-buttons";
 import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { InsightCard } from "@/components/admin/insight-card";
 
 function computeInsights(
   orders: {
@@ -73,50 +74,86 @@ export default async function CancelledOrdersPage({
     Importe: `L. ${Number(o.total_price).toFixed(2)}`,
   }));
 
+  // íconos extraídos como constantes
+const ClockIcon = (
+  <img src="/icons/hourglass.png" alt="platillo" width={28} height={28} />
+);
+
+
+const DishIcon = (
+  <img src="/icons/dish.png" alt="platillo" width={28} height={28} />
+);
+
   return (
     <div className="space-y-6 print:space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <ReportBanner
-          title="Reporte de pedidos cancelados"
-          subtitle={`Análisis por fecha, motivo y platillo · ${periodLabel}`}
-          right={
-            <div className="flex flex-col items-end gap-1 text-right text-sm text-primary-foreground">
-              <span className="font-semibold">{insights.total} cancelaciones</span>
-              <span>L. {insights.impact.toFixed(2)} impacto</span>
-            </div>
-          }
-        />
-        <ReportExportButtons title="Reporte de pedidos cancelados" rows={exportRows} from={from} to={to} />
+      <div>
+  <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+    <ReportExportButtons title="Reporte de pedidos cancelados" rows={exportRows} from={from} to={to} />
+  </div>
+
+  {/* ── Banner café estilo imagen ── */}
+  <div style={{
+    background: "#753B19",
+    borderRadius: 0,
+    padding: "16px 24px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+  }}>
+    {/* Izquierda: título + subtítulo */}
+    <div>
+      <h1 style={{
+        color: "#fff",
+        fontFamily: "'Playfair Display', serif",
+        fontWeight: 700,
+        fontSize: 20,
+        margin: 0,
+      }}>
+        Reporte de Pedidos Cancelados
+      </h1>
+      <p style={{ color: "#e8c87a", fontSize: 12, margin: "4px 0 0", fontWeight: 400 }}>
+        Análisis por fecha, motivo y platillo · {periodLabel}
+      </p>
+    </div>
+
+    {/* Derecha: métricas con separador */}
+    <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{ color: "#fff", fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, lineHeight: 1 }}>
+          {insights.total}
+        </div>
+        <div style={{ color: "#e8c87a", fontSize: 11, marginTop: 2 }}>cancelaciones</div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-primary/20 shadow-sm">
-          <CardHeader className="pb-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Motivo principal</p>
-          </CardHeader>
-          <CardContent>
-            <p className="font-serif text-lg font-semibold text-foreground">{insights.topReason?.text ?? "—"}</p>
-            {insights.topReason && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {insights.topReason.count} cancelaciones ({insights.topReason.pct}%)
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="border-primary/20 shadow-sm">
-          <CardHeader className="pb-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Platillo más afectado</p>
-          </CardHeader>
-          <CardContent>
-            <p className="font-serif text-lg font-semibold text-foreground">{insights.topDish?.name ?? "—"}</p>
-            {insights.topDish && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {insights.topDish.count} líneas ({insights.topDish.pct}%)
-              </p>
-            )}
-          </CardContent>
-        </Card>
+      {/* Línea separadora vertical */}
+      <div style={{ width: 1, height: 40, background: "rgba(255,255,255,0.25)" }} />
+
+      <div style={{ textAlign: "center" }}>
+        <div style={{ color: "#fff", fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, lineHeight: 1 }}>
+          L. {insights.impact.toFixed(2)}
+        </div>
+        <div style={{ color: "#e8c87a", fontSize: 11, marginTop: 2 }}>impacto</div>
       </div>
+    </div>
+  </div>
+
+  {/* ── Línea dorada ── */}
+  <div style={{ borderTop: "15px solid #F1B53E", margin: "0px 0 0 0" }} />
+</div>
+      <div className="flex gap-4">
+  <InsightCard
+    label="Motivo principal"
+    value={insights.topReason?.text ?? "—"}
+    subtext={insights.topReason ? `${insights.topReason.count} cancelaciones (${insights.topReason.pct}%)` : undefined}
+    icon={ClockIcon}
+  />
+  <InsightCard
+    label="Platillo más afectado"
+    value={insights.topDish?.name ?? "—"}
+    subtext={insights.topDish ? `${insights.topDish.count} líneas (${insights.topDish.pct}%)` : undefined}
+    icon={DishIcon}
+  />
+</div>
 
       <Card className="border-primary/15">
         <CardHeader>
