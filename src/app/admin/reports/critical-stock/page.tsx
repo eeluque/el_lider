@@ -16,31 +16,54 @@ export default async function ListaInsumosPage({
   const to = params.to ?? t.to;
 
   const ingredients = await getIngredients(true);
-  const periodLabel = `${from === to ? "Corte al " : "Periodo: "}${new Date(to + "T12:00:00").toLocaleDateString("es-HN", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })}`;
 
-  const exportRows = ingredients.map((i) => {
+  // ── Ordenar: críticos primero, luego por ratio ascendente ──
+  const sorted = [...ingredients].sort((a, b) => {
+    const aCurr = Number(a.current_stock);
+    const aMin  = Number(a.minimum_stock);
+    const bCurr = Number(b.current_stock);
+    const bMin  = Number(b.minimum_stock);
+
+    const aLow = aCurr <= aMin;
+    const bLow = bCurr <= bMin;
+
+    // Críticos siempre primero
+    if (aLow && !bLow) return -1;
+    if (!aLow && bLow) return 1;
+
+    // Dentro del mismo grupo: más urgente primero (ratio más bajo = más crítico)
+    const aRatio = aMin > 0 ? aCurr / aMin : aCurr;
+    const bRatio = bMin > 0 ? bCurr / bMin : bCurr;
+    return aRatio - bRatio;
+  });
+
+  const exportRows = sorted.map((i) => {
     const curr = Number(i.current_stock);
-    const min = Number(i.minimum_stock);
-    const low = curr <= min;
+    const min  = Number(i.minimum_stock);
+    const low  = curr <= min;
     return {
-      Ingrediente: i.name,
-      Unidad: i.unit,
+      Ingrediente:    i.name,
+      Unidad:         i.unit,
       "Stock actual": curr,
       "Stock mínimo": min,
-      Estado: low ? "Bajo — reponer" : "OK",
+      Estado:         low ? "Bajo — reponer" : "OK",
     };
   });
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <ReportBanner title="Lista de insumos" subtitle={periodLabel} />
-        <ReportExportButtons title="Lista de insumos" rows={exportRows} from={from} to={to} />
+      <div>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          <ReportExportButtons title="Lista de Insumos" rows={exportRows} from={from} to={to} />
+        </div>
+        <ReportBanner
+          title="Lista de Insumos"
+          subtitle={new Date().toLocaleDateString("es-HN", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
+        />
       </div>
 
       <div className="rounded-xl border border-primary/10 bg-card p-4">
@@ -55,24 +78,32 @@ export default async function ListaInsumosPage({
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-[rgb(117,59,25)] text-left text-xs font-semibold uppercase text-white">
-                <th className="p-3">Ingrediente</th>
-                <th className="p-3">Unidad</th>
-                <th className="p-3 text-right">Stock actual</th>
-                <th className="p-3 text-right">Stock mínimo</th>
-                <th className="p-3 text-right">Acción</th>
+                <th className="p-3 text-center">Ingrediente</th>
+                <th className="p-3 text-center">Unidad</th>
+                <th className="p-3 text-center">Stock actual</th>
+                <th className="p-3 text-center">Stock mínimo</th>
+                <th className="p-3 text-center">Acción</th>
               </tr>
             </thead>
             <tbody>
-              {ingredients.map((i, idx) => {
+              {sorted.map((i, idx) => {
                 const curr = Number(i.current_stock);
-                const min = Number(i.minimum_stock);
-                const low = curr <= min;
+                const min  = Number(i.minimum_stock);
+                const low  = curr <= min;
                 return (
                   <tr
                     key={i.id}
-                    className={`border-b border-border/60 last:border-0 ${idx % 2 === 1 ? "bg-muted/40" : "bg-card"} ${low ? "bg-red-50/50 dark:bg-red-950/20" : ""}`}
+                    className={`border-b border-border/60 last:border-0 ${
+                      low
+                        ? "bg-red-50/50 dark:bg-red-950/20"
+                        : idx % 2 === 1
+                        ? "bg-muted/40"
+                        : "bg-card"
+                    }`}
                   >
-                    <td className={`p-3 font-medium ${low ? "text-destructive" : "text-foreground"}`}>{i.name}</td>
+                    <td className={`p-3 font-medium ${low ? "text-destructive" : "text-foreground"}`}>
+                      {i.name}
+                    </td>
                     <td className="p-3 text-muted-foreground">{i.unit}</td>
                     <td className="p-3 text-right tabular-nums">{curr}</td>
                     <td className="p-3 text-right tabular-nums">{min}</td>

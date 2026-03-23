@@ -28,9 +28,11 @@ export default async function IngredientConsumptionPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <ReportBanner title="Reporte de consumo de insumos y rotación" subtitle={monthLabel} />
-        <ReportExportButtons title="Consumo de insumos" rows={exportRows} from={from} to={to} />
+      <div>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+            <ReportExportButtons title="Consumo de Insumos y Rotación" rows={exportRows} from={from} to={to} />
+          </div>
+          <ReportBanner title="Consumo de Insumos y Rotación" subtitle={monthLabel} />
       </div>
 
       <div className="rounded-xl border border-primary/10 bg-card p-4">

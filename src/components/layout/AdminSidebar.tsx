@@ -9,7 +9,7 @@ type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
 
 const main: NavItem[] = [
   { href: "/admin", label: "Dashboards", icon: LayoutDashboard },
-  { href: "/admin/orders", label: "Órdenes", icon: ShoppingBag },
+  { href: "/admin/orders", label: "Pedidos", icon: ShoppingBag },
   { href: "/", label: "Inicio", icon: UtensilsCrossed },
 ];
 
