@@ -76,13 +76,11 @@ export default async function DeliveredOrdersDailyPage({
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-md">
-        <div className="flex flex-col gap-3 border-b border-primary/10 bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="font-serif text-lg font-semibold text-[rgb(117,59,25)]">Pedidos entregados</h2>
-          <p className="text-right text-base font-semibold tabular-nums text-[rgb(117,59,25)]">
+        <div className="report-table-header flex flex-col gap-3 border-b border-primary/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="font-serif text-lg font-semibold">Pedidos entregados</h2>
+          <p className="report-table-header-total text-right text-base font-semibold tabular-nums">
             Total:{" "}
-            <span className="text-foreground">
-              L. {totalImport.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
+            <span>L. {totalImport.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </p>
         </div>
 
@@ -91,14 +89,13 @@ export default async function DeliveredOrdersDailyPage({
         ) : (
           <>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] border-collapse text-sm">
+              <table className="outfit report-table w-full min-w-[720px] border-collapse text-sm">
                 <thead>
-                  <tr className="bg-[rgb(250,243,230)] text-left text-xs font-semibold uppercase tracking-wide text-[rgb(139,110,75)]">
+                  <tr className="report-table-columns text-left text-xs font-semibold uppercase tracking-wide">
                     <th className="border-b border-[rgb(232,213,176)] px-4 py-3">N° pedido</th>
                     <th className="border-b border-[rgb(232,213,176)] px-4 py-3">Cliente</th>
                     <th className="border-b border-[rgb(232,213,176)] px-4 py-3">Productos</th>
                     <th className="border-b border-[rgb(232,213,176)] px-4 py-3 text-right">Importe</th>
-                    <th className="border-b border-[rgb(232,213,176)] px-4 py-3">Estado</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -107,16 +104,8 @@ export default async function DeliveredOrdersDailyPage({
                       <td className="px-4 py-4 align-top font-mono text-sm font-bold text-[rgb(117,59,25)]">#{o.order_number}</td>
                       <td className="px-4 py-4 align-top font-semibold text-foreground">{o.customer_name}</td>
                       <td className="max-w-[280px] px-4 py-4 align-top text-muted-foreground">{formatProducts(o.order_items)}</td>
-                      <td className="px-4 py-4 align-top text-right font-bold tabular-nums text-foreground">
+                      <td className="column-money-amount px-4 py-4 align-top text-right font-bold tabular-nums text-foreground">
                         L. {Number(o.total_price).toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </td>
-                      <td className="px-4 py-4 align-top">
-                        <Badge
-                          className="rounded-full border border-brand-green/30 bg-brand-green/15 px-3 py-1 text-xs font-medium text-brand-green"
-                          variant="outline"
-                        >
-                          ✓ Entregado
-                        </Badge>
                       </td>
                     </tr>
                   ))}

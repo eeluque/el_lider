@@ -124,7 +124,6 @@ export default async function InventoryKardexPage({
     <>
       {/* Google Fonts – Outfit */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
         .kardex-root * { font-family: 'Outfit', sans-serif; }
 
         /* header gradient */
@@ -304,7 +303,7 @@ export default async function InventoryKardexPage({
           variant="kardex"
           formFieldNames={["ingredientId"]}
           submitLabel="Filtrar"
-          className="kardex-filter-wrap"
+          className="kardex-filter-wrap mt-4"
         >
           <label htmlFor="k-ing" style={{ marginLeft: 12, fontWeight: 600, fontSize: 14, color: "#1a1a1a" }}>
             Ingrediente:
@@ -348,7 +347,7 @@ export default async function InventoryKardexPage({
             <thead>
               <tr>
                 <th>Fecha</th>
-                <th>Ingrediente</th>
+                {!params.ingredientId && <th>Ingrediente</th>}
                 <th>Tipo de Movimiento</th>
                 <th>Detalle / Motivo</th>
                 <th>Entrada</th>
@@ -361,7 +360,7 @@ export default async function InventoryKardexPage({
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: "center", color: "#999", padding: "32px 0" }}>
+                  <td colSpan={params.ingredientId ? 8 : 9} style={{ textAlign: "center", color: "#999", padding: "32px 0" }}>
                     Sin movimientos en este periodo.
                   </td>
                 </tr>
@@ -383,14 +382,16 @@ export default async function InventoryKardexPage({
                     </td>
 
                     {/* INGREDIENT */}
-                    <td style={{ color: "#2a1f0f", fontWeight: 600 }}>
-                      {m.ingredient?.name ?? "—"}
-                      {m.ingredient?.unit ? (
-                        <span style={{ display: "block", fontWeight: 400, fontSize: 11, color: "#888" }}>
-                          {m.ingredient.unit}
-                        </span>
-                      ) : null}
-                    </td>
+                    {!params.ingredientId && (
+                      <td style={{ color: "#2a1f0f", fontWeight: 600 }}>
+                        {m.ingredient?.name ?? "—"}
+                        {m.ingredient?.unit ? (
+                          <span style={{ display: "block", fontWeight: 400, fontSize: 11, color: "#888" }}>
+                            {m.ingredient.unit}
+                          </span>
+                        ) : null}
+                      </td>
+                    )}
 
                     {/* MOVEMENT TYPE BADGE */}
                     <td>
