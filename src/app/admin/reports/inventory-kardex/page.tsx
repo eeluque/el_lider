@@ -87,9 +87,17 @@ export default async function InventoryKardexPage({
 
   const currentStock = runningStock;
 
+  function ingredientLabel(m: Movement): string {
+    const n = m.ingredient?.name?.trim();
+    const u = m.ingredient?.unit?.trim();
+    if (!n) return "—";
+    return u ? `${n} (${u})` : n;
+  }
+
   const exportRows = rows.map((m) => ({
     Fecha: formatDate(m.created_at).replace("\n", " "),
-    Tipo: m.movement_type === "IN" ? "Entrada" : "Salida",
+    Ingrediente: ingredientLabel(m),
+    Tipo: m.movement_type === "IN" ? "Entrada" : m.movement_type === "ADJUSTMENT" ? "Ajuste" : "Salida",
     Detalle: m.reason ?? "",
     Entrada: m.movement_type === "IN" ? `+${m.quantity}` : "—",
     Salida: m.movement_type === "OUT" || m.movement_type === "ADJUSTMENT" ? `-${m.quantity}` : "—",
@@ -334,6 +342,7 @@ export default async function InventoryKardexPage({
             <thead>
               <tr>
                 <th>Fecha</th>
+                <th>Ingrediente</th>
                 <th>Tipo de Movimiento</th>
                 <th>Detalle / Motivo</th>
                 <th>Entrada</th>
@@ -346,13 +355,15 @@ export default async function InventoryKardexPage({
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: "center", color: "#999", padding: "32px 0" }}>
+                  <td colSpan={9} style={{ textAlign: "center", color: "#999", padding: "32px 0" }}>
                     Sin movimientos en este periodo.
                   </td>
                 </tr>
               )}
               {rows.map((m) => {
-                const isEntrada = m.movement_type.toUpperCase() === "IN";
+                const mt = m.movement_type.toUpperCase();
+                const isEntrada = mt === "IN";
+                const isAjuste = mt === "ADJUSTMENT";
                 const qty = Number(m.quantity);
                 const responsibleName = m.responsible?.full_name ?? "—";
                 // If your users table has image_url, use it; otherwise fall back to initials
@@ -365,11 +376,25 @@ export default async function InventoryKardexPage({
                       {formatDate(m.created_at)}
                     </td>
 
+                    {/* INGREDIENT */}
+                    <td style={{ color: "#2a1f0f", fontWeight: 600 }}>
+                      {m.ingredient?.name ?? "—"}
+                      {m.ingredient?.unit ? (
+                        <span style={{ display: "block", fontWeight: 400, fontSize: 11, color: "#888" }}>
+                          {m.ingredient.unit}
+                        </span>
+                      ) : null}
+                    </td>
+
                     {/* MOVEMENT TYPE BADGE */}
                     <td>
                       {isEntrada ? (
                         <span className="badge badge-entrada">
                           <span className="badge-icon">↑</span> Entrada
+                        </span>
+                      ) : isAjuste ? (
+                        <span className="badge" style={{ background: "#f0e6d8", color: "#6b5030", border: "1px solid #d4c7b0" }}>
+                          Ajuste
                         </span>
                       ) : (
                         <span className="badge badge-salida">

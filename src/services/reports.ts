@@ -31,7 +31,7 @@ export async function getInventoryKardex(params: { ingredientId?: string; from?:
   const supabase = getSupabaseAdmin();
   let q = supabase
     .from("inventory_movements")
-    .select("*, ingredient:ingredients(name), responsible:users(id, full_name)")
+    .select("*, ingredient:ingredients(name, unit), responsible:users(id, full_name)")
     .order("created_at", { ascending: false });
   if (params.ingredientId) q = q.eq("ingredient_id", params.ingredientId);
   if (params.from && params.to) {
