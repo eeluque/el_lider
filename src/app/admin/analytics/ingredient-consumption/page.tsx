@@ -23,16 +23,16 @@ export default async function IngredientConsumptionPage({
   const exportRows = consumption.map((c, i) => ({
     "#": i + 1,
     Insumo: c.name,
-    "Total salidas": c.total,
+    "Total consumo": Number(c.total.toFixed(4)),
   }));
 
   return (
     <div className="space-y-6">
       <div>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-            <ReportExportButtons title="Consumo de Insumos y Rotación" rows={exportRows} from={from} to={to} />
-          </div>
-          <ReportBanner title="Consumo de Insumos y Rotación" subtitle={monthLabel} />
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          <ReportExportButtons title="Consumo de Insumos y Rotación" rows={exportRows} from={from} to={to} />
+        </div>
+        <ReportBanner title="Consumo de Insumos y Rotación" subtitle={monthLabel} />
       </div>
 
       <div className="rounded-xl border border-primary/10 bg-card p-4">
