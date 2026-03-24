@@ -17,19 +17,17 @@ export default async function CriticalStockPage({
   const ingredients = await getIngredients(true);
 
   const sorted = [...ingredients].sort((a, b) => {
-  const currA = Number(a.current_stock);
-  const minA = Number(a.minimum_stock);
-  const lowA = currA <= minA;
-
-  const currB = Number(b.current_stock);
-  const minB = Number(b.minimum_stock);
-  const lowB = currB <= minB;
-
-  if (lowA && !lowB) return -1;
-  if (!lowA && lowB) return 1;
-
-  return currA - currB;
-});
+    const aCurr = Number(a.current_stock);
+    const aMin = Number(a.minimum_stock);
+    const bCurr = Number(b.current_stock);
+    const bMin = Number(b.minimum_stock);
+    const aLow = aCurr <= aMin;
+    const bLow = bCurr <= bMin;
+    if (aLow && !bLow) return -1;
+    if (!aLow && bLow) return 1;
+    if (aLow && bLow) return aCurr - bCurr;
+    return aCurr - bCurr;
+  });
 
   const paged = paginateSlice(sorted, page, REPORT_PAGE_SIZE);
 

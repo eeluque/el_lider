@@ -176,19 +176,24 @@ describe("reports service", () => {
   it("getIngredientConsumption agrupa salidas OUT y ordena por total", async () => {
     setResponseQueue([
       q([
+        { id: "i1", name: "Arroz" },
+        { id: "i2", name: "Frijol" },
+      ]),
+      q([
         {
           ingredient_id: "i1",
           quantity: 5,
-          created_at: "2025-01-01T00:00:00Z",
+          movement_type: "OUT",
           ingredient: { name: "Arroz" },
         },
         {
           ingredient_id: "i2",
           quantity: 10,
-          created_at: "2025-01-02T00:00:00Z",
+          movement_type: "OUT",
           ingredient: { name: "Frijol" },
         },
       ]),
+      q([]),
     ]);
     const r = await getIngredientConsumption({ from: "2025-01-01", to: "2025-01-31" });
     expect(r[0].total).toBe(10);
@@ -198,14 +203,17 @@ describe("reports service", () => {
 
   it("getIngredientConsumption usa id si no hay nombre de ingrediente", async () => {
     setResponseQueue([
+      q([]),
       q([
         {
           ingredient_id: "i99",
           quantity: 1,
+          movement_type: "OUT",
           created_at: "2025-01-01T00:00:00Z",
           ingredient: undefined,
         },
       ]),
+      q([]),
     ]);
     const r = await getIngredientConsumption({ from: "2025-01-01", to: "2025-01-31" });
     expect(r[0].name).toBe("i99");

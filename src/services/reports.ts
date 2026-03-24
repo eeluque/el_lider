@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/db";
 import { toLocalDateString } from "@/lib/date-range";
+import { MENU_ITEM_CONSUMPTION_RECIPES, normalizeMenuItemName } from "@/lib/ingredient-consumption-recipes";
 
 function toDayBounds(from: string, to: string) {
   const f = from.length <= 10 ? `${from}T00:00:00` : from;
@@ -154,25 +155,71 @@ export async function getKardexWithBalance(ingredientId: string, from: string, t
   return { ingredient: ing, movements: enriched };
 }
 
-/** Ingredient consumption (OUT movements) in period */
+/**
+ * Consumo de insumos en el periodo:
+ * 1) Estimado por platillos vendidos (pedidos entregados o listos) según recetas en `ingredient-consumption-recipes`.
+ * 2) Salidas registradas en kárdex (movimientos OUT y ADJUSTMENT, mismo criterio que el reporte de movimientos).
+ */
 export async function getIngredientConsumption(params: { from: string; to: string }) {
   const supabase = getSupabaseAdmin();
   const { fromIso, toIso } = toDayBounds(params.from, params.to);
-  const { data } = await supabase
+
+  const { data: ingRows } = await supabase.from("ingredients").select("id, name").eq("active", true);
+  const ingredientsList = (ingRows ?? []) as { id: string; name: string }[];
+  const byIngredient: Record<string, { name: string; total: number }> = {};
+  for (const ing of ingredientsList) {
+    byIngredient[ing.id] = { name: ing.name, total: 0 };
+  }
+  const nameToId = new Map(ingredientsList.map((i) => [i.name.trim().toLowerCase(), i.id]));
+
+  const { data: movData } = await supabase
     .from("inventory_movements")
-    .select("*, ingredient:ingredients(name)")
-    .eq("movement_type", "OUT")
+    .select("ingredient_id, quantity, movement_type, ingredient:ingredients(name)")
+    .in("movement_type", ["OUT", "ADJUSTMENT"])
     .gte("created_at", fromIso)
     .lte("created_at", toIso)
     .order("created_at");
-  const rows = (data ?? []) as { ingredient_id: string; quantity: number; created_at: string; ingredient?: { name: string } }[];
-  const byIngredient: Record<string, { name: string; total: number }> = {};
-  for (const r of rows) {
+
+  for (const r of (movData ?? []) as unknown as {
+    ingredient_id: string;
+    quantity: number;
+    ingredient?: { name: string };
+  }[]) {
     const id = r.ingredient_id;
-    if (!byIngredient[id]) byIngredient[id] = { name: (r.ingredient as { name: string })?.name ?? id, total: 0 };
-    byIngredient[id].total += Number(r.quantity);
+    if (!byIngredient[id]) {
+      byIngredient[id] = { name: r.ingredient?.name ?? id, total: 0 };
+    }
+    byIngredient[id].total += Math.abs(Number(r.quantity));
   }
+
+  const { data: orderData } = await supabase
+    .from("orders")
+    .select("order_items(quantity, menu_item:menu_items(name))")
+    .in("status", ["delivered", "ready"])
+    .gte("created_at", fromIso)
+    .lte("created_at", toIso);
+
+  for (const o of orderData ?? []) {
+    const items =
+      (o as unknown as { order_items?: { quantity: number; menu_item?: { name: string } | null }[] }).order_items ?? [];
+    for (const li of items) {
+      const key = normalizeMenuItemName(li.menu_item?.name ?? "");
+      const recipe = MENU_ITEM_CONSUMPTION_RECIPES[key];
+      if (!recipe?.length) continue;
+      const sold = Number(li.quantity) || 0;
+      for (const line of recipe) {
+        const iid = nameToId.get(line.ingredientName.trim().toLowerCase());
+        if (!iid) continue;
+        if (!byIngredient[iid]) {
+          byIngredient[iid] = { name: line.ingredientName, total: 0 };
+        }
+        byIngredient[iid].total += line.qtyPerUnit * sold;
+      }
+    }
+  }
+
   return Object.entries(byIngredient)
-    .map(([id, v]) => ({ id, ...v }))
+    .map(([id, v]) => ({ id, name: v.name, total: v.total }))
+    .filter((x) => x.total > 0)
     .sort((a, b) => b.total - a.total);
 }

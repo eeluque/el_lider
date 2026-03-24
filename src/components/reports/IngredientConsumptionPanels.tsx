@@ -15,7 +15,9 @@ export function IngredientConsumptionPanels({
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-primary/15 bg-card p-4 shadow-sm">
           <h3 className="font-serif text-lg font-semibold">Consumo en el período</h3>
-          <p className="text-xs text-muted-foreground">Top 10 de insumos consumidos (salidas registradas)</p>
+          <p className="text-xs text-muted-foreground">
+            Ventas (entregados / listos) con recetas del menú + salidas registradas (OUT / ajustes)
+          </p>
           <ol className="mt-4 space-y-3">
             {top10.map((item, i) => {
               const w = (item.total / max) * 100;
@@ -39,7 +41,7 @@ export function IngredientConsumptionPanels({
 
         <div className="rounded-xl border border-primary/15 bg-card p-4 shadow-sm">
           <h3 className="font-serif text-lg font-semibold">Rotación de insumos</h3>
-          <p className="text-xs text-muted-foreground">Volumen total de salidas en el período</p>
+          <p className="text-xs text-muted-foreground">Mismo total agregado por insumo en el período</p>
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={top10} layout="vertical" margin={{ left: 8, right: 16 }}>
