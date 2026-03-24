@@ -87,7 +87,7 @@ describe("reports service", () => {
     await getCancelledOrders({ from: "2025-01-01", to: "2025-01-31", reason: "espera" });
   });
 
-  it("getSalesSummary agrupa por día", async () => {
+  it("getSalesSummary agrupa por día (zona local)", async () => {
     setResponseQueue([
       q([
         {
@@ -105,45 +105,10 @@ describe("reports service", () => {
     const r = await getSalesSummary({
       from: "2025-03-01",
       to: "2025-03-31",
-      groupBy: "day",
     });
     expect(r.total).toBe(150);
     const keys = Object.keys(r.byPeriod);
     expect(keys.length).toBeGreaterThan(0);
-  });
-
-  it("getSalesSummary agrupa por semana y por mes", async () => {
-    setResponseQueue([
-      q([
-        {
-          created_at: "2025-03-05T12:00:00.000Z",
-          total_price: 10,
-          status: "delivered",
-        },
-      ]),
-    ]);
-    const w = await getSalesSummary({
-      from: "2025-03-01",
-      to: "2025-03-31",
-      groupBy: "week",
-    });
-    expect(Object.keys(w.byPeriod).length).toBeGreaterThanOrEqual(1);
-
-    setResponseQueue([
-      q([
-        {
-          created_at: "2025-04-15T12:00:00.000Z",
-          total_price: 20,
-          status: "delivered",
-        },
-      ]),
-    ]);
-    const m = await getSalesSummary({
-      from: "2025-04-01",
-      to: "2025-04-30",
-      groupBy: "month",
-    });
-    expect(m.byPeriod["2025-4"] ?? m.byPeriod["2025-04"]).toBeDefined();
   });
 
   it("getSalesSummary con fechas ISO largas (toDayBounds)", async () => {
@@ -151,7 +116,6 @@ describe("reports service", () => {
     await getSalesSummary({
       from: "2025-01-01T12:00:00.000Z",
       to: "2025-01-31T12:00:00.000Z",
-      groupBy: "day",
     });
   });
 

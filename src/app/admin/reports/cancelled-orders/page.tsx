@@ -6,6 +6,9 @@ import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-r
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { InsightCard } from "@/components/admin/insight-card";
+import { ReportPagination } from "@/components/admin/report-pagination";
+import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
+import { Suspense } from "react";
 
 function computeInsights(
   orders: {
@@ -41,31 +44,33 @@ function computeInsights(
 export default async function CancelledOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; reason?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const dr = defaultReportRange();
   const from = params.from ?? dr.from;
   const to = params.to ?? dr.to;
+  const page = parseReportPage(params.page);
 
-  const orders = await getCancelledOrders({
+  const orders = (await getCancelledOrders({
     from,
     to,
-    reason: params.reason,
-  });
-  const insights = computeInsights(orders as Parameters<typeof computeInsights>[0]);
+  })) as {
+    id: string;
+    order_number: string;
+    created_at: string;
+    customer_name: string;
+    cancellation_reason: string | null;
+    total_price: number;
+    order_items?: { menu_item?: { name: string } }[];
+  }[];
+
+  const insights = computeInsights(orders);
   const periodLabel = `${from} – ${to}`;
 
-  const exportRows = (
-    orders as {
-      order_number: string;
-      created_at: string;
-      customer_name: string;
-      cancellation_reason: string | null;
-      total_price: number;
-      order_items?: { menu_item?: { name: string } }[];
-    }[]
-  ).map((o) => ({
+  const pagedOrders = paginateSlice(orders, page, REPORT_PAGE_SIZE);
+
+  const exportRows = orders.map((o) => ({
     Pedido: o.order_number,
     Fecha: new Date(o.created_at).toLocaleString("es-HN"),
     Cliente: o.customer_name,
@@ -74,104 +79,102 @@ export default async function CancelledOrdersPage({
     Importe: `L. ${Number(o.total_price).toFixed(2)}`,
   }));
 
-  // íconos extraídos como constantes
-const ClockIcon = (
-  <img src="/icons/hourglass.png" alt="platillo" width={28} height={28} />
-);
+  const ClockIcon = <img src="/icons/hourglass.png" alt="" width={28} height={28} />;
 
-
-const DishIcon = (
-  <img src="/icons/dish.png" alt="platillo" width={28} height={28} />
-);
+  const DishIcon = <img src="/icons/dish.png" alt="" width={28} height={28} />;
 
   return (
     <div className="space-y-6 print:space-y-4">
       <div>
-  <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-    <ReportExportButtons title="Reporte de pedidos cancelados" rows={exportRows} from={from} to={to} />
-  </div>
-
-  {/* ── Banner café estilo imagen ── */}
-  <div style={{
-    background: "#753B19",
-    borderRadius: 0,
-    padding: "16px 24px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-  }}>
-    {/* Izquierda: título + subtítulo */}
-    <div>
-      <h1 style={{
-        color: "#fff",
-        fontFamily: "'Playfair Display', serif",
-        fontWeight: 700,
-        fontSize: 20,
-        margin: 0,
-      }}>
-        Reporte de Pedidos Cancelados
-      </h1>
-      <p style={{ color: "#e8c87a", fontSize: 12, margin: "4px 0 0", fontWeight: 400 }}>
-        Análisis por fecha, motivo y platillo · {periodLabel}
-      </p>
-    </div>
-
-    {/* Derecha: métricas con separador */}
-    <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-      <div style={{ textAlign: "center" }}>
-        <div style={{ color: "#fff", fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, lineHeight: 1 }}>
-          {insights.total}
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          <ReportExportButtons title="Reporte de pedidos cancelados" rows={exportRows} from={from} to={to} />
         </div>
-        <div style={{ color: "#e8c87a", fontSize: 11, marginTop: 2 }}>cancelaciones</div>
-      </div>
 
-      {/* Línea separadora vertical */}
-      <div style={{ width: 1, height: 40, background: "rgba(255,255,255,0.25)" }} />
+        <div
+          style={{
+            background: "#753B19",
+            borderRadius: 0,
+            padding: "16px 24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <h1
+              style={{
+                color: "#fff",
+                fontFamily: "'Playfair Display', serif",
+                fontWeight: 700,
+                fontSize: 20,
+                margin: 0,
+              }}
+            >
+              Reporte de Pedidos Cancelados
+            </h1>
+            <p style={{ color: "#e8c87a", fontSize: 12, margin: "4px 0 0", fontWeight: 400 }}>
+              Análisis por fecha y platillo · {periodLabel}
+            </p>
+          </div>
 
-      <div style={{ textAlign: "center" }}>
-        <div style={{ color: "#fff", fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, lineHeight: 1 }}>
-          L. {insights.impact.toFixed(2)}
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  color: "#fff",
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: 28,
+                  fontWeight: 700,
+                  lineHeight: 1,
+                }}
+              >
+                {insights.total}
+              </div>
+              <div style={{ color: "#e8c87a", fontSize: 11, marginTop: 2 }}>cancelaciones</div>
+            </div>
+
+            <div style={{ width: 1, height: 40, background: "rgba(255,255,255,0.25)" }} />
+
+            <div style={{ textAlign: "center" }}>
+              <div
+                style={{
+                  color: "#fff",
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: 28,
+                  fontWeight: 700,
+                  lineHeight: 1,
+                }}
+              >
+                L. {insights.impact.toFixed(2)}
+              </div>
+              <div style={{ color: "#e8c87a", fontSize: 11, marginTop: 2 }}>impacto</div>
+            </div>
+          </div>
         </div>
-        <div style={{ color: "#e8c87a", fontSize: 11, marginTop: 2 }}>impacto</div>
-      </div>
-    </div>
-  </div>
 
-  {/* ── Línea dorada ── */}
-  <div style={{ borderTop: "15px solid #F1B53E", margin: "0px 0 0 0" }} />
-</div>
+        <div style={{ borderTop: "15px solid #F1B53E", margin: "0px 0 0 0" }} />
+      </div>
       <div className="flex gap-4">
-  <InsightCard
-    label="Motivo principal"
-    value={insights.topReason?.text ?? "—"}
-    subtext={insights.topReason ? `${insights.topReason.count} cancelaciones (${insights.topReason.pct}%)` : undefined}
-    icon={ClockIcon}
-  />
-  <InsightCard
-    label="Platillo más afectado"
-    value={insights.topDish?.name ?? "—"}
-    subtext={insights.topDish ? `${insights.topDish.count} líneas (${insights.topDish.pct}%)` : undefined}
-    icon={DishIcon}
-  />
-</div>
+        <InsightCard
+          label="Motivo principal"
+          value={insights.topReason?.text ?? "—"}
+          subtext={insights.topReason ? `${insights.topReason.count} cancelaciones (${insights.topReason.pct}%)` : undefined}
+          icon={ClockIcon}
+        />
+        <InsightCard
+          label="Platillo más afectado"
+          value={insights.topDish?.name ?? "—"}
+          subtext={insights.topDish ? `${insights.topDish.count} líneas (${insights.topDish.pct}%)` : undefined}
+          icon={DishIcon}
+        />
+      </div>
 
       <Card className="border-primary/15">
         <CardHeader>
-          <p className="text-sm font-semibold uppercase tracking-wide text-[rgb(117,59,25)]">Filtrar cancelaciones</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-[rgb(117,59,25)]">Filtrar por fechas</p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <ReportDateRangeFiltersSuspense from={from} to={to} formFieldNames={["reason"]} submitLabel="Filtrar">
-            <div>
-              <label className="mb-1 block text-xs text-muted-foreground">Motivo</label>
-              <input
-                type="text"
-                name="reason"
-                placeholder="Todos"
-                defaultValue={params.reason}
-                className="rounded-lg border border-input bg-background px-2 py-2 text-sm"
-              />
-            </div>
-          </ReportDateRangeFiltersSuspense>
+          <ReportDateRangeFiltersSuspense from={from} to={to} submitLabel="Filtrar" />
           <a href="/admin/reports/cancelled-orders" className="text-sm text-secondary underline">
             Limpiar filtros
           </a>
@@ -195,35 +198,28 @@ const DishIcon = (
               </tr>
             </thead>
             <tbody>
-              {orders.map(
-                (o: {
-                  id: string;
-                  order_number: string;
-                  created_at: string;
-                  customer_name: string;
-                  cancellation_reason: string | null;
-                  total_price: number;
-                  order_items?: { menu_item?: { name: string } }[];
-                }) => (
-                  <tr key={o.id} className="border-b border-border/60 last:border-0 odd:bg-muted/30">
-                    <td className="p-3 font-mono text-xs">{o.order_number}</td>
-                    <td className="p-3 whitespace-nowrap text-muted-foreground">{new Date(o.created_at).toLocaleString("es-HN")}</td>
-                    <td className="p-3">{o.customer_name}</td>
-                    <td className="max-w-[200px] p-3 text-xs text-muted-foreground">
-                      {o.order_items?.map((i) => (i as { menu_item?: { name: string } }).menu_item?.name).filter(Boolean).join(", ") || "—"}
-                    </td>
-                    <td className="p-3">
-                      <Badge variant="destructive" className="font-normal">
-                        {o.cancellation_reason ?? "—"}
-                      </Badge>
-                    </td>
-                    <td className="p-3 text-right font-medium">L. {Number(o.total_price).toFixed(2)}</td>
-                  </tr>
-                )
-              )}
+              {pagedOrders.map((o) => (
+                <tr key={o.id} className="border-b border-border/60 last:border-0 odd:bg-muted/30">
+                  <td className="p-3 font-mono text-xs">{o.order_number}</td>
+                  <td className="p-3 whitespace-nowrap text-muted-foreground">{new Date(o.created_at).toLocaleString("es-HN")}</td>
+                  <td className="p-3">{o.customer_name}</td>
+                  <td className="max-w-[200px] p-3 text-xs text-muted-foreground">
+                    {o.order_items?.map((i) => (i as { menu_item?: { name: string } }).menu_item?.name).filter(Boolean).join(", ") || "—"}
+                  </td>
+                  <td className="p-3">
+                    <Badge variant="destructive" className="font-normal">
+                      {o.cancellation_reason ?? "—"}
+                    </Badge>
+                  </td>
+                  <td className="p-3 text-right font-medium">L. {Number(o.total_price).toFixed(2)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
+        <Suspense fallback={null}>
+          <ReportPagination totalItems={orders.length} pageSize={REPORT_PAGE_SIZE} />
+        </Suspense>
       </div>
     </div>
   );

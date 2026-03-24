@@ -47,3 +47,24 @@ export function startOfDayIso(dateYmd: string): string {
 export function endOfDayIso(dateYmd: string): string {
   return `${dateYmd}T23:59:59`;
 }
+
+/**
+ * Serie diaria (desde–hasta inclusive) con ventas por día y etiqueta corta para gráficos.
+ */
+export function fillDailySalesSeries(
+  fromYmd: string,
+  toYmd: string,
+  salesByDay: Record<string, number>
+): { name: string; ventas: number; dateKey: string }[] {
+  const out: { name: string; ventas: number; dateKey: string }[] = [];
+  const start = new Date(fromYmd + "T12:00:00");
+  const end = new Date(toYmd + "T12:00:00");
+  for (let t = start.getTime(); t <= end.getTime(); t += 86400000) {
+    const d = new Date(t);
+    const dateKey = toLocalDateString(d);
+    const ventas = salesByDay[dateKey] ?? 0;
+    const name = d.toLocaleDateString("es-HN", { weekday: "short", day: "numeric", month: "short" });
+    out.push({ name, ventas, dateKey });
+  }
+  return out;
+}

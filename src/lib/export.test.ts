@@ -10,7 +10,11 @@ vi.mock("jspdf-autotable", () => ({
 
 vi.mock("jspdf", () => ({
   default: class MockPdf {
-    internal = { pageSize: { getWidth: () => 200, getHeight: () => 300 } };
+    internal = {
+      pageSize: { getWidth: () => 200, getHeight: () => 300 },
+      getNumberOfPages: () => 1,
+    };
+    setPage = vi.fn();
     setFillColor = vi.fn();
     rect = vi.fn();
     setFont = vi.fn();
@@ -77,7 +81,7 @@ describe("export", () => {
 
   it("exportToExcel escribe xlsx", async () => {
     const XLSX = await getXlsxApi();
-    const spy = vi.spyOn(XLSX, "writeFile").mockImplementation(() => {});
+    const spy = vi.spyOn(XLSX, "writeFile").mockImplementation(() => { });
     await exportToExcel("Rep", [{ Col1: "a", Col2: "b" }]);
     expect(spy).toHaveBeenCalled();
     const name = spy.mock.calls[0][1] as string;
@@ -86,14 +90,14 @@ describe("export", () => {
 
   it("exportToExcel usa fileBaseName", async () => {
     const XLSX = await getXlsxApi();
-    const spy = vi.spyOn(XLSX, "writeFile").mockImplementation(() => {});
+    const spy = vi.spyOn(XLSX, "writeFile").mockImplementation(() => { });
     await exportToExcel("Rep", [{ x: 1 }], { fileBaseName: "Rep_2025-01-01_a_2025-01-02" });
     expect(spy).toHaveBeenCalledWith(expect.anything(), "Rep_2025-01-01_a_2025-01-02.xlsx");
   });
 
   it("exportToExcel con from/to incluye subtítulo en hoja", async () => {
     const XLSX = await getXlsxApi();
-    const spy = vi.spyOn(XLSX, "writeFile").mockImplementation(() => {});
+    const spy = vi.spyOn(XLSX, "writeFile").mockImplementation(() => { });
     await exportToExcel("Rep", [{ x: 1 }], {
       fileBaseName: "R",
       from: "2025-01-01",

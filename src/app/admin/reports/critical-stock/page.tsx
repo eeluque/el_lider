@@ -1,52 +1,35 @@
 import { getIngredients } from "@/services/inventory";
-import { todayRange } from "@/lib/date-range";
 import { ReportBanner } from "@/components/admin/report-banner";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
-import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { Button } from "@/components/ui/button";
+import { ReportPagination } from "@/components/admin/report-pagination";
+import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
+import { Suspense } from "react";
 
-export default async function ListaInsumosPage({
+export default async function CriticalStockPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const params = await searchParams;
-  const t = todayRange();
-  const from = params.from ?? t.from;
-  const to = params.to ?? t.to;
+  const page = parseReportPage(params.page);
 
   const ingredients = await getIngredients(true);
 
-  // ── Ordenar: críticos primero, luego por ratio ascendente ──
-  const sorted = [...ingredients].sort((a, b) => {
-    const aCurr = Number(a.current_stock);
-    const aMin  = Number(a.minimum_stock);
-    const bCurr = Number(b.current_stock);
-    const bMin  = Number(b.minimum_stock);
+  const sorted = [...ingredients].sort((a, b) => Number(a.current_stock) - Number(b.current_stock));
 
-    const aLow = aCurr <= aMin;
-    const bLow = bCurr <= bMin;
-
-    // Críticos siempre primero
-    if (aLow && !bLow) return -1;
-    if (!aLow && bLow) return 1;
-
-    // Dentro del mismo grupo: más urgente primero (ratio más bajo = más crítico)
-    const aRatio = aMin > 0 ? aCurr / aMin : aCurr;
-    const bRatio = bMin > 0 ? bCurr / bMin : bCurr;
-    return aRatio - bRatio;
-  });
+  const paged = paginateSlice(sorted, page, REPORT_PAGE_SIZE);
 
   const exportRows = sorted.map((i) => {
     const curr = Number(i.current_stock);
-    const min  = Number(i.minimum_stock);
-    const low  = curr <= min;
+    const min = Number(i.minimum_stock);
+    const low = curr <= min;
     return {
-      Ingrediente:    i.name,
-      Unidad:         i.unit,
+      Ingrediente: i.name,
+      Unidad: i.unit,
       "Stock actual": curr,
       "Stock mínimo": min,
-      Estado:         low ? "Bajo — reponer" : "OK",
+      Estado: low ? "Bajo — reponer" : "OK",
     };
   });
 
@@ -54,7 +37,7 @@ export default async function ListaInsumosPage({
     <div className="space-y-6">
       <div>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-          <ReportExportButtons title="Lista de Insumos" rows={exportRows} from={from} to={to} />
+          <ReportExportButtons title="Lista de Insumos" rows={exportRows} />
         </div>
         <ReportBanner
           title="Lista de Insumos"
@@ -64,13 +47,6 @@ export default async function ListaInsumosPage({
             year: "numeric",
           })}
         />
-      </div>
-
-      <div className="rounded-xl border border-primary/10 bg-card p-4">
-        <p className="mb-3 text-xs text-muted-foreground">
-          El stock es el actual del sistema; el rango de fechas se usa para el contexto del reporte y la exportación.
-        </p>
-        <ReportDateRangeFiltersSuspense from={from} to={to} submitLabel="Actualizar periodo" />
       </div>
 
       <div className="overflow-hidden rounded-xl border border-primary/15 bg-card shadow-sm">
@@ -86,24 +62,17 @@ export default async function ListaInsumosPage({
               </tr>
             </thead>
             <tbody>
-              {sorted.map((i, idx) => {
+              {paged.map((i, idx) => {
                 const curr = Number(i.current_stock);
-                const min  = Number(i.minimum_stock);
-                const low  = curr <= min;
+                const min = Number(i.minimum_stock);
+                const low = curr <= min;
                 return (
                   <tr
                     key={i.id}
-                    className={`border-b border-border/60 last:border-0 ${
-                      low
-                        ? "bg-red-50/50 dark:bg-red-950/20"
-                        : idx % 2 === 1
-                        ? "bg-muted/40"
-                        : "bg-card"
-                    }`}
+                    className={`border-b border-border/60 last:border-0 ${low ? "bg-red-50/50 dark:bg-red-950/20" : idx % 2 === 1 ? "bg-muted/40" : "bg-card"
+                      }`}
                   >
-                    <td className={`p-3 font-medium ${low ? "text-destructive" : "text-foreground"}`}>
-                      {i.name}
-                    </td>
+                    <td className={`p-3 font-medium ${low ? "text-destructive" : "text-foreground"}`}>{i.name}</td>
                     <td className="p-3 text-muted-foreground">{i.unit}</td>
                     <td className="p-3 text-right tabular-nums">{curr}</td>
                     <td className="p-3 text-right tabular-nums">{min}</td>
@@ -122,6 +91,9 @@ export default async function ListaInsumosPage({
             </tbody>
           </table>
         </div>
+        <Suspense fallback={null}>
+          <ReportPagination totalItems={sorted.length} pageSize={REPORT_PAGE_SIZE} />
+        </Suspense>
       </div>
     </div>
   );

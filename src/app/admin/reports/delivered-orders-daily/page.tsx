@@ -4,6 +4,9 @@ import { ReportBanner } from "@/components/admin/report-banner";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
 import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { Badge } from "@/components/ui/badge";
+import { ReportPagination } from "@/components/admin/report-pagination";
+import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
+import { Suspense } from "react";
 
 type OrderRow = {
   id: string;
@@ -27,14 +30,17 @@ function formatProducts(items: OrderRow["order_items"]) {
 export default async function DeliveredOrdersDailyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const dr = defaultReportRange();
   const from = params.from ?? dr.from;
   const to = params.to ?? dr.to;
+  const page = parseReportPage(params.page);
 
   const orders = (await getDeliveredOrdersInRange(from, to)) as OrderRow[];
+  const pagedOrders = paginateSlice(orders, page, REPORT_PAGE_SIZE);
+
   const periodLabel = `${new Date(from + "T12:00:00").toLocaleDateString("es-HN", {
     day: "numeric",
     month: "long",
@@ -59,10 +65,10 @@ export default async function DeliveredOrdersDailyPage({
   return (
     <div className="space-y-6">
       <div>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-            <ReportExportButtons title="Pedidos Entregados" rows={exportRows} from={from} to={to} />
-          </div>
-          <ReportBanner title="Pedidos Entregados" subtitle={periodLabel} />
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+          <ReportExportButtons title="Pedidos Entregados" rows={exportRows} from={from} to={to} />
+        </div>
+        <ReportBanner title="Pedidos Entregados" subtitle={periodLabel} />
       </div>
 
       <div className="rounded-xl border border-primary/10 bg-card p-4">
@@ -70,7 +76,6 @@ export default async function DeliveredOrdersDailyPage({
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-md">
-        {/* Cabecera del bloque tabular */}
         <div className="flex flex-col gap-3 border-b border-primary/10 bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="font-serif text-lg font-semibold text-[rgb(117,59,25)]">Pedidos entregados</h2>
           <p className="text-right text-base font-semibold tabular-nums text-[rgb(117,59,25)]">
@@ -97,14 +102,9 @@ export default async function DeliveredOrdersDailyPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((o, idx) => (
-                    <tr
-                      key={o.id}
-                      className={`border-b border-border/50 ${idx % 2 === 1 ? "bg-muted/25" : "bg-card"}`}
-                    >
-                      <td className="px-4 py-4 align-top font-mono text-sm font-bold text-[rgb(117,59,25)]">
-                        #{o.order_number}
-                      </td>
+                  {pagedOrders.map((o, idx) => (
+                    <tr key={o.id} className={`border-b border-border/50 ${idx % 2 === 1 ? "bg-muted/25" : "bg-card"}`}>
+                      <td className="px-4 py-4 align-top font-mono text-sm font-bold text-[rgb(117,59,25)]">#{o.order_number}</td>
                       <td className="px-4 py-4 align-top font-semibold text-foreground">{o.customer_name}</td>
                       <td className="max-w-[280px] px-4 py-4 align-top text-muted-foreground">{formatProducts(o.order_items)}</td>
                       <td className="px-4 py-4 align-top text-right font-bold tabular-nums text-foreground">
@@ -124,20 +124,9 @@ export default async function DeliveredOrdersDailyPage({
               </table>
             </div>
 
-            <div className="flex flex-col gap-3 border-t border-primary/10 bg-muted/20 px-5 py-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-              <p>
-                Mostrando {n > 0 ? `1-${n}` : "0"} de {n} {n === 1 ? "registro" : "registros"}
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Página</span>
-                <span
-                  className="inline-flex min-w-8 items-center justify-center rounded-md border border-primary/40 bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground shadow-sm"
-                  aria-current="page"
-                >
-                  1
-                </span>
-              </div>
-            </div>
+            <Suspense fallback={null}>
+              <ReportPagination totalItems={n} pageSize={REPORT_PAGE_SIZE} />
+            </Suspense>
           </>
         )}
       </div>

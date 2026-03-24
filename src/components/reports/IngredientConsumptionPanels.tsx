@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export function IngredientConsumptionPanels({
@@ -8,32 +7,14 @@ export function IngredientConsumptionPanels({
 }: {
   items: { id: string; name: string; total: number }[];
 }) {
-  const [mode, setMode] = useState<"week" | "month">("week");
   const top10 = items.slice(0, 10);
   const max = Math.max(...top10.map((i) => i.total), 1);
 
   return (
     <div className="space-y-4">
-      <div className="inline-flex rounded-full border border-primary/20 bg-muted/50 p-1">
-        <button
-          type="button"
-          className={`rounded-full px-4 py-1.5 text-sm font-medium ${mode === "week" ? "bg-brand-green text-white shadow" : ""}`}
-          onClick={() => setMode("week")}
-        >
-          Semana
-        </button>
-        <button
-          type="button"
-          className={`rounded-full px-4 py-1.5 text-sm font-medium ${mode === "month" ? "bg-brand-green text-white shadow" : ""}`}
-          onClick={() => setMode("month")}
-        >
-          Mes
-        </button>
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-primary/15 bg-card p-4 shadow-sm">
-          <h3 className="font-serif text-lg font-semibold">Esta {mode === "week" ? "semana" : "mes"}</h3>
+          <h3 className="font-serif text-lg font-semibold">Consumo en el período</h3>
           <p className="text-xs text-muted-foreground">Top 10 de insumos consumidos (salidas registradas)</p>
           <ol className="mt-4 space-y-3">
             {top10.map((item, i) => {

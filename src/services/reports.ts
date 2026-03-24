@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/db";
+import { toLocalDateString } from "@/lib/date-range";
 
 function toDayBounds(from: string, to: string) {
   const f = from.length <= 10 ? `${from}T00:00:00` : from;
@@ -71,8 +72,8 @@ export async function getCancelledOrders(params: { from?: string; to?: string; r
   return data ?? [];
 }
 
-/** Sales totals by day for a range */
-export async function getSalesSummary(params: { from: string; to: string; groupBy: "day" | "week" | "month" }) {
+/** Ventas totales por día natural (zona local) en el rango. */
+export async function getSalesSummary(params: { from: string; to: string }) {
   const supabase = getSupabaseAdmin();
   const { fromIso, toIso } = toDayBounds(params.from, params.to);
   const { data } = await supabase
@@ -87,19 +88,10 @@ export async function getSalesSummary(params: { from: string; to: string; groupB
   const byPeriod: Record<string, number> = {};
   for (const r of delivered) {
     const d = new Date(r.created_at);
-    let key: string;
-    if (params.groupBy === "day") key = d.toISOString().slice(0, 10);
-    else if (params.groupBy === "week") key = getWeekKey(d);
-    else key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const key = toLocalDateString(d);
     byPeriod[key] = (byPeriod[key] ?? 0) + Number(r.total_price);
   }
   return { byPeriod, total: delivered.reduce((s, r) => s + Number(r.total_price), 0) };
-}
-
-function getWeekKey(d: Date) {
-  const start = new Date(d);
-  start.setDate(d.getDate() - d.getDay());
-  return start.toISOString().slice(0, 10);
 }
 
 /** Top dishes by quantity sold in a period */

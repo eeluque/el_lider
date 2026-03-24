@@ -3,6 +3,9 @@ import { getIngredients } from "@/services/inventory";
 import { defaultReportRange } from "@/lib/date-range";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
 import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
+import { ReportPagination } from "@/components/admin/report-pagination";
+import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
+import { Suspense } from "react";
 
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -46,12 +49,13 @@ type Movement = {
 export default async function InventoryKardexPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; to?: string; ingredientId?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; ingredientId?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const dr = defaultReportRange();
   const from = params.from ?? dr.from;
   const to = params.to ?? dr.to;
+  const page = parseReportPage(params.page);
 
   const [movements, ingredients] = await Promise.all([
     getInventoryKardex({
@@ -86,6 +90,8 @@ export default async function InventoryKardexPage({
   });
 
   const currentStock = runningStock;
+
+  const pagedRows = paginateSlice(rows, page, REPORT_PAGE_SIZE);
 
   function formatRowIngredient(m: Movement): string {
     const n = m.ingredient?.name?.trim();
@@ -277,7 +283,7 @@ export default async function InventoryKardexPage({
         {/* ── Export Buttons ── */}
         <div style={{ display: "flex", justifyContent: "flex-end", margin: "24px 0 -16px" }}>
           <ReportExportButtons title="Kárdex de Movimientos de Insumos" rows={exportRows} from={from} to={to} ingredientLabel={headerIngredientName}
-  ingredientUnit={ingredientUnit} />
+            ingredientUnit={ingredientUnit} />
         </div>
 
         {/* ── Page header ── */}
@@ -360,7 +366,7 @@ export default async function InventoryKardexPage({
                   </td>
                 </tr>
               )}
-              {rows.map((m) => {
+              {pagedRows.map((m) => {
                 const mt = m.movement_type.toUpperCase();
                 const isEntrada = mt === "IN";
                 const isAjuste = mt === "ADJUSTMENT";
@@ -448,6 +454,11 @@ export default async function InventoryKardexPage({
             </tbody>
           </table>
         </div>
+        {rows.length > 0 && (
+          <Suspense fallback={null}>
+            <ReportPagination totalItems={rows.length} pageSize={REPORT_PAGE_SIZE} />
+          </Suspense>
+        )}
       </div>
     </>
   );

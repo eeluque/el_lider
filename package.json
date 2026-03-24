@@ -11,6 +11,7 @@
     "test:coverage": "vitest run --config vitest.config.mjs --coverage",
     "test:watch": "vitest --config vitest.config.mjs",
     "seed:report-fixtures": "tsx scripts/seed-report-fixtures.ts",
+    "seed:pagination": "tsx scripts/seed-pagination-test-data.ts",
     "seed": "tsx scripts/seed.ts",
     "upsert-admin": "tsx scripts/upsert-admin-user.ts"
   },
