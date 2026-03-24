@@ -66,7 +66,7 @@ export default async function InventoryKardexPage({
   const selectedIngredient = ingredients.find(
     (i: { id: string; name: string }) => i.id === params.ingredientId
   );
-  const ingredientLabel = selectedIngredient?.name ?? "Todos los ingredientes";
+  const headerIngredientName = selectedIngredient?.name ?? "Todos los ingredientes";
   const ingredientUnit = selectedIngredient?.unit ?? "";
 
   // API devuelve movimientos más recientes primero; el saldo va en orden cronológico
@@ -87,7 +87,7 @@ export default async function InventoryKardexPage({
 
   const currentStock = runningStock;
 
-  function ingredientLabel(m: Movement): string {
+  function formatRowIngredient(m: Movement): string {
     const n = m.ingredient?.name?.trim();
     const u = m.ingredient?.unit?.trim();
     if (!n) return "—";
@@ -96,7 +96,7 @@ export default async function InventoryKardexPage({
 
   const exportRows = rows.map((m) => ({
     Fecha: formatDate(m.created_at).replace("\n", " "),
-    Ingrediente: ingredientLabel(m),
+    Ingrediente: formatRowIngredient(m),
     Tipo: m.movement_type === "IN" ? "Entrada" : m.movement_type === "ADJUSTMENT" ? "Ajuste" : "Salida",
     Detalle: m.reason ?? "",
     Entrada: m.movement_type === "IN" ? `+${m.quantity}` : "—",
@@ -276,7 +276,7 @@ export default async function InventoryKardexPage({
       <div className="kardex-root" style={{ maxWidth: 960, margin: "0 auto", padding: "0 16px 40px" }}>
         {/* ── Export Buttons ── */}
         <div style={{ display: "flex", justifyContent: "flex-end", margin: "24px 0 -16px" }}>
-          <ReportExportButtons title="Kárdex de Movimientos de Insumos" rows={exportRows} from={from} to={to} ingredientLabel={ingredientLabel}
+          <ReportExportButtons title="Kárdex de Movimientos de Insumos" rows={exportRows} from={from} to={to} ingredientLabel={headerIngredientName}
   ingredientUnit={ingredientUnit} />
         </div>
 
@@ -316,7 +316,7 @@ export default async function InventoryKardexPage({
         {/* ── Ingredient card header ── */}
         <div className="kardex-card">
           <div className="kardex-card-left">
-            <span className="kardex-card-name">{ingredientLabel}</span>
+            <span className="kardex-card-name">{headerIngredientName}</span>
             {ingredientUnit && (
               <span className="kardex-unit-badge">{ingredientUnit}</span>
             )}
