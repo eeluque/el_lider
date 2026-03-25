@@ -20,13 +20,13 @@ const manage: NavItem[] = [
 ];
 
 const reports: NavItem[] = [
+  { href: "/admin/reports/delivered-orders-daily", label: "Pedidos entregados", icon: FileBarChart },
+  { href: "/admin/reports/inventory-kardex", label: "Kardex", icon: FileBarChart },
+  { href: "/admin/reports/critical-stock", label: "Lista de insumos", icon: FileBarChart },
   { href: "/admin/analytics/sales-summary", label: "Resumen de ventas", icon: FileBarChart },
   { href: "/admin/analytics/top-dishes", label: "Platillos más vendidos", icon: FileBarChart },
   { href: "/admin/analytics/ingredient-consumption", label: "Consumo de insumos", icon: FileBarChart },
   { href: "/admin/reports/cancelled-orders", label: "Pedidos cancelados", icon: FileBarChart },
-  { href: "/admin/reports/inventory-kardex", label: "Kardex", icon: FileBarChart },
-  { href: "/admin/reports/critical-stock", label: "Lista de insumos", icon: FileBarChart },
-  { href: "/admin/reports/delivered-orders-daily", label: "Pedidos entregados", icon: FileBarChart },
 ];
 
 function NavBlock({ title, items }: { title: string; items: NavItem[] }) {

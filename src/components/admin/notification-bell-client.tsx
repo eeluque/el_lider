@@ -112,7 +112,7 @@ export function NotificationBellClient({ notifications }: { notifications: Notif
                         Stock actual: <strong>{n.current_stock}</strong> — mínimo: <strong>{n.minimum_stock}</strong>
                       </p>
                       <p style={{ margin: "4px 0 0", fontSize: 11, color: "#e53e3e", fontWeight: 600 }}>
-                        Programa una reposición inmediata
+                        Programe una reposición inmediata
                       </p>
                     </div>
                   </div>
