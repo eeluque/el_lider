@@ -21,25 +21,64 @@ export function TopDishesReport({
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <div className="rounded-xl border border-primary/15 bg-card p-4 shadow-sm">
+      <div className="rounded-xl border border-primary/15 bg-card p-4 shadow-sm" style={{ height: "488px" }}>
         <h3 className="font-serif text-lg font-semibold text-foreground">Distribución de ventas</h3>
         <p className="text-xs text-muted-foreground">Proporción de cada platillo sobre el total (top 5)</p>
-        <div className="mx-auto mt-4 h-64 w-full max-w-sm">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}>
-                {pieData.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [`${Number(value ?? 0)} uds`, "Cantidad"]} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+        <ResponsiveContainer width="100%" height="70%">
+  <PieChart margin={{ bottom: 50 }}>
+    <Pie
+      data={pieData}
+      dataKey="value"
+      nameKey="name"
+      cx="50%"
+      cy="50%"
+      outerRadius={85}
+      label={({ percent }) =>
+        `${((percent ?? 0) * 100).toFixed(0)}%`
+      }
+    >
+      {pieData.map((_, i) => (
+        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+      ))}
+    </Pie>
+
+    <Tooltip formatter={(value) => [`${Number(value ?? 0)} uds`, "Cantidad"]} />
+  </PieChart>
+</ResponsiveContainer>
+
+<div className="flex flex-col items-center text-sm">
+  
+  {/* Fila 1 (2 elementos) */}
+  <div className="flex justify-center gap-6 mb-2">
+    {pieData.slice(0, 2).map((entry, index) => (
+      <div key={index} className="flex items-center gap-2">
+        <div
+          className="h-3 w-3 rounded-sm"
+          style={{ backgroundColor: COLORS[index % COLORS.length] }}
+        />
+        <span>{entry.name}</span>
+      </div>
+    ))}
+  </div>
+
+  {/* Fila 2 (3 elementos) */}
+  <div className="flex justify-center gap-6">
+    {pieData.slice(2, 5).map((entry, index) => (
+      <div key={index} className="flex items-center gap-2">
+        <div
+          className="h-3 w-3 rounded-sm"
+          style={{ backgroundColor: COLORS[(index + 2) % COLORS.length] }}
+        />
+        <span>{entry.name}</span>
+      </div>
+    ))}
+  </div>
+
+</div>
+
       </div>
 
-      <div className="rounded-xl border border-primary/15 bg-card p-4 shadow-sm">
+      <div className="rounded-xl border border-primary/15 bg-card p-4 shadow-sm" style={{ height: "488px" }}>
         <h3 className="font-serif text-lg font-semibold text-foreground">Ranking detallado</h3>
         <p className="text-xs text-muted-foreground">Unidades vendidas en el periodo</p>
         <ul className="mt-4 space-y-3">

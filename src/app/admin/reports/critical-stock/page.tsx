@@ -94,7 +94,7 @@ export default async function CriticalStockPage({
                     <td className="p-3 text-muted-foreground">{i.unit}</td>
                     <td className="p-3 text-right tabular-nums">{curr}</td>
                     <td className="p-3 text-right tabular-nums">{min}</td>
-                    <td className="p-3 text-right">
+                    <td className="p-3 text-center">
                       {low ? (
                         <Button type="button" size="sm" variant="destructive" className="text-xs">
                           Reponer

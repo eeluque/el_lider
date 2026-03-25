@@ -60,8 +60,8 @@ function NavBlock({ title, items }: { title: string; items: NavItem[] }) {
 export function AdminSidebar() {
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-[rgb(117,59,25)]/10 bg-primary py-6">
-      <Link href="/admin" className="mb-8 px-5">
-      <img src="/images/logo-el-lider.png" alt="Comedor El Líder" width={125} height={125} className="rounded-full" />
+      <Link href="/admin" className="mb-8 px-5 flex flex-col items-center text-center">
+      <img src="/images/logo-el-lider.png" alt="Comedor El Líder" width={110} height={110} className="rounded-full" />
         <div>
           <p className="font-serif text-lg font-bold leading-tight text-[rgb(117,59,25)]">Comedor El Líder</p>
           <p className="text-xs text-[rgb(117,59,25)]/70">Panel administrativo</p>
