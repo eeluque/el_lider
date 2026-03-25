@@ -192,7 +192,7 @@ export default async function CancelledOrdersPage({
                 <th className="p-3">Nº pedido</th>
                 <th className="p-3">Fecha</th>
                 <th className="p-3">Cliente</th>
-                <th className="p-3">Ítems</th>
+                <th className="p-3">Productos</th>
                 <th className="p-3">Motivo</th>
                 <th className="p-3 text-left">Importe</th>
               </tr>

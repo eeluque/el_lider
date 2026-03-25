@@ -44,11 +44,18 @@ export default async function CriticalStockPage({
     };
   });
 
+  const today = new Date().toISOString().slice(0, 10); // "2026-03-25"
   return (
     <div className="space-y-6">
       <div>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-          <ReportExportButtons title="Lista de Insumos" rows={exportRows} />
+          <ReportExportButtons
+            title="Lista de Insumos"
+            rows={exportRows}
+            from={today}
+            to={today}
+            subtitlePrefix="Hoy"
+          />
         </div>
         <ReportBanner
           title="Lista de Insumos"

@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Comedor El Líder",
   description: "Sistema de pedidos y gestión - Comedor El Líder",
+  icons: {
+    icon: "/images/logo-el-lider.png",
+  },
 };
 
 export default function RootLayout({

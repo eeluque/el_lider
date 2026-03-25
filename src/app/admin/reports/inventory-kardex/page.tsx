@@ -102,8 +102,8 @@ export default async function InventoryKardexPage({
 
   const exportRows = rows.map((m) => ({
     Fecha: formatDate(m.created_at).replace("\n", " "),
-    Ingrediente: formatRowIngredient(m),
-    Tipo: m.movement_type === "IN" ? "Entrada" : m.movement_type === "ADJUSTMENT" ? "Ajuste" : "Salida",
+    ...(!params.ingredientId && { Ingrediente: formatRowIngredient(m) }),
+    "Tipo de Movimiento": m.movement_type === "IN" ? "Entrada" : m.movement_type === "ADJUSTMENT" ? "Ajuste" : "Salida",
     Detalle: m.reason ?? "",
     Entrada: m.movement_type === "IN" ? `+${m.quantity}` : "—",
     Salida: m.movement_type === "OUT" || m.movement_type === "ADJUSTMENT" ? `-${m.quantity}` : "—",
