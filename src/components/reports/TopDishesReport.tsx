@@ -94,8 +94,8 @@ export function TopDishesReport({
                     {i + 1}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-foreground">{d.name}</p>
-                    <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                    <p className="truncate font-medium text-foreground text-sm">{d.name}</p>
+                    <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-[9.5px] text-muted-foreground mb-1">
                       {d.category}
                     </span>
                   </div>
