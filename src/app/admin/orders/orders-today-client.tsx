@@ -70,17 +70,6 @@ export function OrdersTodayClient({
           <h1 className="font-serif text-2xl font-bold text-foreground">Pedidos de hoy</h1>
           <p className="text-sm text-secondary">{dateLabel}</p>
         </div>
-        <form className="flex items-center gap-2" action="/admin/orders" method="get">
-          <input
-            type="date"
-            name="date"
-            defaultValue={currentDate}
-            className="rounded-lg border border-input bg-background px-2 py-1.5 text-sm"
-          />
-          <Button type="submit" size="sm" variant="secondary">
-            Ver fecha
-          </Button>
-        </form>
       </div>
 
       <div className="flex flex-wrap gap-2">

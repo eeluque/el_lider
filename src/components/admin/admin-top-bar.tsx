@@ -5,7 +5,7 @@ import { signOut, useSession } from "next-auth/react";
 import { Home, Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function AdminTopBar() {
+export function AdminTopBar({ notificationBell }: { notificationBell?: React.ReactNode }) {
   const { data: session } = useSession();
 
   return (
@@ -17,15 +17,7 @@ export function AdminTopBar() {
       >
         <Home className="size-5" />
       </Link>
-      <button
-        type="button"
-        className="relative flex size-9 items-center justify-center rounded-full text-primary transition hover:bg-primary/15"
-        title="Notificaciones"
-        aria-label="Notificaciones"
-      >
-        <Bell className="size-5" />
-        <span className="absolute right-1 top-1 size-2 rounded-full bg-destructive" />
-      </button>
+      {notificationBell}
       <div className="flex items-center gap-2 rounded-full border border-primary/25 bg-muted/50 py-1 pl-1 pr-2">
         <span className="flex size-8 items-center justify-center rounded-full bg-primary/25 text-primary">
           <User className="size-4" />

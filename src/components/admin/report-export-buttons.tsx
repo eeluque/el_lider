@@ -12,6 +12,7 @@ type Props = {
   to?: string;
   ingredientLabel?: string;  
   ingredientUnit?: string;  
+  subtitlePrefix?: string;
   className?: string;
 };
 

@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/db";
 import type { Ingredient, InventoryMovement, InventoryMovementType } from "@/types";
+import { createCriticalStockNotification, resolveNotification } from "@/services/notifications";
 
 export async function getIngredients(activeOnly = false): Promise<Ingredient[]> {
   const supabase = getSupabaseAdmin();
@@ -72,5 +73,28 @@ export async function createMovement(params: {
     .from("ingredients")
     .update({ current_stock: Math.max(0, current + delta) })
     .eq("id", params.ingredientId);
-  if (updError) throw updError;
+  
+    if (updError) throw updError;
+
+  // ── Notificaciones de stock crítico ──
+  const { data: updatedIng } = await supabase
+    .from("ingredients")
+    .select("id, name, current_stock, minimum_stock")
+    .eq("id", params.ingredientId)
+    .single();
+
+  if (updatedIng) {
+    const curr = Number(updatedIng.current_stock);
+    const min = Number(updatedIng.minimum_stock);
+    if (curr <= min) {
+      await createCriticalStockNotification(
+        updatedIng.id,
+        updatedIng.name,
+        curr,
+        min
+      );
+    } else {
+      await resolveNotification(updatedIng.id);
+    }
+  }
 }

@@ -130,6 +130,34 @@
   --sidebar-ring: rgb(var(--brand-rust));
 }
 
+/* Report table*/
+
+.report-table-header {
+  background: #753B19;
+  color: #fff;
+}
+
+.report-table-header-total {
+  color: #f5d68a;
+}
+
+.report-table-columns {
+  background: rgba(241, 181, 62, 0.6); 
+  color: rgb(107, 80, 48);
+}
+
+.column-money-amount {
+  color: #588f3d;
+}
+
+.outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

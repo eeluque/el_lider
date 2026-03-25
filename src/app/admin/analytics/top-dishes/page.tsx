@@ -53,7 +53,7 @@ export default async function TopDishesPage({
         <>
           <TopDishesReport dishes={dishes} />
 
-          <div className="overflow-hidden rounded-xl border border-primary/15 bg-card shadow-sm">
+          <div className="mt-15 overflow-hidden rounded-xl border border-primary/15 bg-card shadow-sm">
             <div className="border-b border-primary/10 bg-[rgb(117,59,25)] px-4 py-3">
               <h2 className="font-semibold text-white">Listado completo</h2>
             </div>
@@ -77,7 +77,7 @@ export default async function TopDishesPage({
                         <td className="p-3 font-medium">{d.name}</td>
                         <td className="p-3 text-muted-foreground">{d.category}</td>
                         <td className="p-3 text-right tabular-nums">{d.quantity}</td>
-                        <td className="p-3 text-right tabular-nums">L. {d.revenue.toFixed(2)}</td>
+                        <td className="p-3 text-right tabular-nums column-money-amount">L. {d.revenue.toFixed(2)}</td>
                       </tr>
                     );
                   })}

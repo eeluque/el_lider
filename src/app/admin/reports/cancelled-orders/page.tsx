@@ -186,15 +186,15 @@ export default async function CancelledOrdersPage({
           <h2 className="font-semibold text-white">Detalle de cancelaciones</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="outfit w-full text-sm">
             <thead>
               <tr className="bg-primary/15 text-left text-xs font-semibold uppercase text-[rgb(117,59,25)]">
                 <th className="p-3">Nº pedido</th>
                 <th className="p-3">Fecha</th>
                 <th className="p-3">Cliente</th>
-                <th className="p-3">Ítems</th>
+                <th className="p-3">Productos</th>
                 <th className="p-3">Motivo</th>
-                <th className="p-3 text-right">Importe</th>
+                <th className="p-3 text-left">Importe</th>
               </tr>
             </thead>
             <tbody>
@@ -211,7 +211,7 @@ export default async function CancelledOrdersPage({
                       {o.cancellation_reason ?? "—"}
                     </Badge>
                   </td>
-                  <td className="p-3 text-right font-medium">L. {Number(o.total_price).toFixed(2)}</td>
+                  <td className="column-money-amount p-3 text-right font-medium">L. {Number(o.total_price).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
