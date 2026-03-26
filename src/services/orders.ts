@@ -148,3 +148,14 @@ export async function getPendingOrders(): Promise<OrderWithItems[]> {
   }
   return withItems;
 }
+
+//Puntos de fidelización
+export async function getCustomerTotalPoints(phone: string): Promise<number> {
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("orders")
+    .select("reward_points_earned")
+    .eq("customer_phone", phone)
+    .eq("status", "delivered");
+  return (data ?? []).reduce((sum, o) => sum + Number(o.reward_points_earned ?? 0), 0);
+}

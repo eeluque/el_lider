@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,27 @@ export function OrdersTodayClient({
 }) {
   const [tab, setTab] = useState<OrderStatus | "all">("all");
 
+  const [clock, setClock] = useState("");
+
+  useEffect(() => {
+    function tick() {
+      setClock(new Date().toLocaleString("es-HN", {
+        timeZone: "America/Tegucigalpa",
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      }));
+    }
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const counts = useMemo(() => {
     const c: Record<OrderStatus | "all", number> = {
       all: orders.length,
@@ -70,6 +91,9 @@ export function OrdersTodayClient({
           <h1 className="font-serif text-2xl font-bold text-foreground">Pedidos de hoy</h1>
           <p className="text-sm text-secondary">{dateLabel}</p>
         </div>
+        <div style={{ textAlign: "right", marginBottom: "-130px" }}>
+        <p className="outfit font-serif text-3xl font-bold text-foreground">{clock.split(",").pop()?.trim()}</p>
+  </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
