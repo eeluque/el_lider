@@ -77,7 +77,7 @@ export default async function DeliveredOrdersDailyPage({
 
       <div className="overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-md">
         <div className="report-table-header flex flex-col gap-3 border-b border-primary/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="font-serif text-lg font-semibold">Pedidos entregados</h2>
+          <h2 className="outfit font-serif text-lg font-semibold">Pedidos Entregados</h2>
           <p className="report-table-header-total text-right text-base font-semibold tabular-nums">
             Total:{" "}
             <span>L. {totalImport.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>

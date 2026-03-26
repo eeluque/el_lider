@@ -100,19 +100,18 @@ export default async function CancelledOrdersPage({
             justifyContent: "space-between",
           }}
         >
-          <div>
+          <div className="outfit">
             <h1
               style={{
                 color: "#fff",
-                fontFamily: "'Playfair Display', serif",
                 fontWeight: 700,
-                fontSize: 20,
+                fontSize: 22,
                 margin: 0,
               }}
             >
               Reporte de Pedidos Cancelados
             </h1>
-            <p style={{ color: "#e8c87a", fontSize: 12, margin: "4px 0 0", fontWeight: 400 }}>
+            <p style={{ color: "#e8c87a", fontSize: 16, margin: "4px 0 0", fontWeight: 400 }}>
               Análisis por fecha y platillo · {periodLabel}
             </p>
           </div>
@@ -122,7 +121,7 @@ export default async function CancelledOrdersPage({
               <div
                 style={{
                   color: "#fff",
-                  fontFamily: "'Playfair Display', serif",
+                  fontFamily: "'Outfit', serif",
                   fontSize: 28,
                   fontWeight: 700,
                   lineHeight: 1,
@@ -139,7 +138,7 @@ export default async function CancelledOrdersPage({
               <div
                 style={{
                   color: "#fff",
-                  fontFamily: "'Playfair Display', serif",
+                  fontFamily: "'Outfit', serif",
                   fontSize: 28,
                   fontWeight: 700,
                   lineHeight: 1,
@@ -192,7 +191,7 @@ export default async function CancelledOrdersPage({
                 <th className="p-3">Nº pedido</th>
                 <th className="p-3">Fecha</th>
                 <th className="p-3">Cliente</th>
-                <th className="p-3">Productos</th>
+                <th className="p-3">Ítems</th>
                 <th className="p-3">Motivo</th>
                 <th className="p-3 text-left">Importe</th>
               </tr>

@@ -7,7 +7,9 @@ export default async function AdminOrdersPage({
   searchParams: Promise<{ date?: string }>;
 }) {
   const params = await searchParams;
-  const currentDate = params.date ?? new Date().toISOString().slice(0, 10);
+  const currentDate = params.date ?? new Date().toLocaleDateString("en-CA", {
+    timeZone: "America/Tegucigalpa",
+  });
   const from = `${currentDate}T00:00:00`;
   const to = `${currentDate}T23:59:59`;
   const orders = await getOrdersWithItemsInRange(from, to);

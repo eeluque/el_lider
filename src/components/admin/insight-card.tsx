@@ -15,14 +15,14 @@ export function InsightCard({ label, value, subtext, icon }: Props) {
         {icon}
       </div>
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[#CD6633]">
           {label}
         </p>
         <p className="mt-1 font-serif text-[17px] font-bold text-[rgb(117,59,25)]">
           {value}
         </p>
         {subtext && (
-          <p className="mt-0.5 text-xs text-primary/50">{subtext}</p>
+          <p className="mt-0.5 text-xs text-[#CD6633]">{subtext}</p>
         )}
       </div>
     </div>

@@ -22,7 +22,7 @@ export function TopDishesReport({
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <div className="rounded-xl border border-primary/15 bg-card p-4 shadow-sm" style={{ height: "488px" }}>
-        <h3 className="font-serif text-lg font-semibold text-foreground">Distribución de ventas</h3>
+        <h3 className="outfit font-serif text-lg font-semibold text-foreground">Distribución de ventas</h3>
         <p className="text-xs text-muted-foreground">Proporción de cada platillo sobre el total (top 5)</p>
         <ResponsiveContainer width="100%" height="70%">
   <PieChart margin={{ bottom: 50 }}>
@@ -79,7 +79,7 @@ export function TopDishesReport({
       </div>
 
       <div className="rounded-xl border border-primary/15 bg-card p-4 shadow-sm" style={{ height: "488px" }}>
-        <h3 className="font-serif text-lg font-semibold text-foreground">Ranking detallado</h3>
+        <h3 className="outfit font-serif text-lg font-semibold text-foreground">Ranking detallado</h3>
         <p className="text-xs text-muted-foreground">Unidades vendidas en el periodo</p>
         <ul className="mt-4 space-y-3">
           {top5.map((d, i) => {

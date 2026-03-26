@@ -72,6 +72,7 @@ export default async function InventoryKardexPage({
   );
   const headerIngredientName = selectedIngredient?.name ?? "Todos los ingredientes";
   const ingredientUnit = selectedIngredient?.unit ?? "";
+  const isSingleIngredient = !!params.ingredientId;
 
   // API devuelve movimientos más recientes primero; el saldo va en orden cronológico
   const chronological = [...(movements as Movement[])].sort(
@@ -176,6 +177,7 @@ export default async function InventoryKardexPage({
           background: #753B19;
           border-radius: 10px 10px 0 0;
           padding: 14px 20px;
+          min-height: 64px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -197,10 +199,7 @@ export default async function InventoryKardexPage({
 
         /* table */
         .kardex-table-wrap {
-          border: 1.5px solid #e8d5b0;
-          border-top: none;
-          border-radius: 0 0 10px 10px;
-          overflow: hidden;
+          overflow-x: auto;
         }
         .kardex-table { width: 100%; border-collapse: collapse; font-size: 13px; }
         .kardex-table thead tr {
@@ -249,9 +248,9 @@ export default async function InventoryKardexPage({
         .badge-icon { font-size: 13px; }
 
         /* qty cells */
-        .qty-entrada { color: #588F3D; font-weight: 700; text-align: right; }
-        .qty-salida  { color: #CD6633; font-weight: 700; text-align: right; }
-        .qty-dash    { color: #bbb; text-align: right;}
+        .kardex-root .qty-entrada { color: #588F3D !important; font-weight: 700; text-align: right; }
+        .kardex-root .qty-salida  { color: #CD6633 !important; font-weight: 700; text-align: right; }
+        .kardex-root .qty-dash    { color: #bbb; text-align: right; }
 
         /* avatar */
         .avatar {
@@ -275,10 +274,15 @@ export default async function InventoryKardexPage({
           flex-shrink: 0;
         }
         .responsible-cell { display: flex; align-items: center; gap: 8px; }
+
+        .kardex-table th.center { text-align: center; }
+        .kardex-table td.center { text-align: center; }
+
+        .responsible-cell { display: flex; align-items: center; justify-content: center; gap: 8px; }
       `}</style>
 
 
-      <div className="kardex-root" style={{ maxWidth: 960, margin: "0 auto", padding: "0 16px 40px" }}>
+      <div className="kardex-root" style={{ maxWidth: 1460, margin: "0 auto", padding: "0 16px 40px" }}>
         {/* ── Export Buttons ── */}
         <div style={{ display: "flex", justifyContent: "flex-end", margin: "24px 0 -16px" }}>
           <ReportExportButtons title="Kárdex de Movimientos de Insumos" rows={exportRows} from={from} to={to} ingredientLabel={headerIngredientName}
@@ -287,7 +291,7 @@ export default async function InventoryKardexPage({
 
         {/* ── Page header ── */}
         <div className="kardex-header" style={{ marginTop: 24 }}>
-          <h1 style={{ color: "#000000", fontWeight: 700, fontSize: 22, margin: 0, fontFamily: "'Playfair Display', serif" }}>
+          <h1 style={{ color: "#633b22", fontWeight: 700, fontSize: 22, margin: 0, fontFamily: "'Outfit', serif" }}>
             Kárdex de Movimientos de Insumos
           </h1>
           <p style={{ color: "#6F6868", fontSize: 13, margin: "6px 0 0", fontWeight: 400 }}>
@@ -297,169 +301,183 @@ export default async function InventoryKardexPage({
         <div style={{ borderTop: "3.5px solid #F1B53E", margin: "8px 0 0 0" }} />
 
         {/* ── Filtros de tiempo + ingrediente ── */}
-        <ReportDateRangeFiltersSuspense
-          from={from}
-          to={to}
-          variant="kardex"
-          formFieldNames={["ingredientId"]}
-          submitLabel="Filtrar"
-          className="kardex-filter-wrap mt-4"
-        >
-          <label htmlFor="k-ing" style={{ marginLeft: 12, fontWeight: 600, fontSize: 14, color: "#1a1a1a" }}>
-            Ingrediente:
-          </label>
-          <select id="k-ing" name="ingredientId" defaultValue={params.ingredientId ?? ""}>
-            <option value="">Todos</option>
-            {(ingredients as { id: string; name: string }[]).map((i) => (
-              <option key={i.id} value={i.id}>
-                {i.name}
-              </option>
-            ))}
-          </select>
-        </ReportDateRangeFiltersSuspense>
+        <div className="rounded-xl border border-primary/10 bg-card p-4 mb-6">
+          <ReportDateRangeFiltersSuspense
+            from={from}
+            to={to}
+            variant="kardex"
+            formFieldNames={["ingredientId"]}
+            submitLabel="Filtrar"
+            className="kardex-filter-wrap"
+          >
+            <label htmlFor="k-ing" style={{ marginLeft: 12, fontWeight: 600, fontSize: 14, color: "#1a1a1a" }}>
+              Ingrediente:
+            </label>
+            <select id="k-ing" name="ingredientId" defaultValue={params.ingredientId ?? ""}>
+              <option value="">Todos</option>
+              {(ingredients as { id: string; name: string }[]).map((i) => (
+                <option key={i.id} value={i.id}>
+                  {i.name}
+                </option>
+              ))}
+            </select>
+          </ReportDateRangeFiltersSuspense>
+        </div>
 
-        {/* ── Ingredient card header ── */}
-        <div className="kardex-card">
-          <div className="kardex-card-left">
-            <span className="kardex-card-name">{headerIngredientName}</span>
-            {ingredientUnit && (
-              <span className="kardex-unit-badge">{ingredientUnit}</span>
-            )}
-          </div>
-          <div style={{ textAlign: "right", fontFamily: "'Playfair Display', serif" }}>
-            <div className="kardex-stock-label">Stock actual:</div>
-            <div>
-              <span className="kardex-stock-value">
-                {currentStock}
-              </span>
+        {/* ── Contenedor principal con bordes y sombra (igual que en pedidos entregados) ── */}
+        <div className="overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-md">
+          
+          {/* Ingredient card header */}
+          <div className="kardex-card">
+            <div className="kardex-card-left">
+              <span className="kardex-card-name">{headerIngredientName}</span>
               {ingredientUnit && (
-                <span style={{ color: "#ffffff", fontSize: 12, marginLeft: 4, fontFamily: "'Outfit', sans-serif", fontWeight: 200 }}>
-                  {ingredientUnit} en existencia
-                </span>
+                <span className="kardex-unit-badge">{ingredientUnit}</span>
+              )}
+            </div>
+            <div style={{ textAlign: "right", fontFamily: "'Playfair Display', serif" }}>
+              {isSingleIngredient && (
+                <>
+                  <div className="kardex-stock-label">Stock actual:</div>
+                  <div>
+                    <span className="kardex-stock-value">
+                      {currentStock}
+                    </span>
+                    {ingredientUnit && (
+                      <span style={{ color: "#ffffff", fontSize: 12, marginLeft: 4, fontFamily: "'Outfit', sans-serif", fontWeight: 200 }}>
+                        {ingredientUnit} en existencia
+                      </span>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           </div>
-        </div>
 
-        {/* ── Table ── */}
-        <div className="kardex-table-wrap">
-          <table className="kardex-table">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                {!params.ingredientId && <th>Ingrediente</th>}
-                <th>Tipo de Movimiento</th>
-                <th>Detalle / Motivo</th>
-                <th>Entrada</th>
-                <th>Salida</th>
-                <th>Stock</th>
-                <th>Responsable</th>
-                <th className="right">Observaciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 && (
+          {/* Table wrapper con overflow para scroll horizontal */}
+          <div className="kardex-table-wrap">
+            <table className="kardex-table">
+              <thead>
                 <tr>
-                  <td colSpan={params.ingredientId ? 8 : 9} style={{ textAlign: "center", color: "#999", padding: "32px 0" }}>
-                    Sin movimientos en este periodo.
-                  </td>
+                  <th style={{ width: "9%", textAlign: "left" }}>Fecha</th>
+                  {!params.ingredientId && <th style={{ width: "12%", textAlign: "left" }}>Ingrediente</th>}
+                  <th style={{ width: "13%", textAlign: "center" }}>Tipo de Movimiento</th>
+                  <th style={{ width: "20%", textAlign: "center" }}>Detalle / Motivo</th>
+                  <th style={{ width: "8%", textAlign: "right" }}>Entrada</th>
+                  <th style={{ width: "8%", textAlign: "right" }}>Salida</th>
+                  {isSingleIngredient && (
+                    <th style={{ width: "7%", textAlign: "right" }}>Stock</th>
+                  )}
+                  <th style={{ width: "15%", textAlign: "center" }}>Responsable</th>
+                  <th style={{ width: "8%", textAlign: "center" }}>Observaciones</th>
                 </tr>
-              )}
-              {pagedRows.map((m) => {
-                const mt = m.movement_type.toUpperCase();
-                const isEntrada = mt === "IN";
-                const isAjuste = mt === "ADJUSTMENT";
-                const qty = Number(m.quantity);
-                const responsibleName = m.responsible?.full_name ?? "—";
-                // If your users table has image_url, use it; otherwise fall back to initials
-                const avatarUrl = m.responsible?.image_url ?? null;
-
-                return (
-                  <tr key={m.id}>
-                    {/* DATE */}
-                    <td style={{ whiteSpace: "pre-line", color: "#6b5030", fontSize: 12 }}>
-                      {formatDate(m.created_at)}
-                    </td>
-
-                    {/* INGREDIENT */}
-                    {!params.ingredientId && (
-                      <td style={{ color: "#2a1f0f", fontWeight: 600 }}>
-                        {m.ingredient?.name ?? "—"}
-                        {m.ingredient?.unit ? (
-                          <span style={{ display: "block", fontWeight: 400, fontSize: 11, color: "#888" }}>
-                            {m.ingredient.unit}
-                          </span>
-                        ) : null}
-                      </td>
-                    )}
-
-                    {/* MOVEMENT TYPE BADGE */}
-                    <td>
-                      {isEntrada ? (
-                        <span className="badge badge-entrada">
-                          <span className="badge-icon">↑</span> Entrada
-                        </span>
-                      ) : isAjuste ? (
-                        <span className="badge" style={{ background: "#f0e6d8", color: "#6b5030", border: "1px solid #d4c7b0" }}>
-                          Ajuste
-                        </span>
-                      ) : (
-                        <span className="badge badge-salida">
-                          <span className="badge-icon">↓</span> Salida
-                        </span>
-                      )}
-                    </td>
-
-                    {/* REASON */}
-                    <td style={{ color: "#4a3820" }}>{m.reason ?? "—"}</td>
-
-                    {/* ENTRADA qty */}
-                    <td className={isEntrada ? "qty-entrada" : "qty-dash"}>
-                      {isEntrada ? `+${qty}` : "—"}
-                    </td>
-
-                    {/* SALIDA qty */}
-                    <td className={!isEntrada ? "qty-salida" : "qty-dash"}>
-                      {!isEntrada ? `-${qty}` : "—"}
-                    </td>
-
-                    {/* RUNNING STOCK */}
-                    <td style={{ fontWeight: 600, textAlign: "right" }}>{m.runningStock}</td>
-
-                    {/* RESPONSIBLE with avatar */}
-                    <td>
-                      <div className="responsible-cell">
-                        {avatarUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={avatarUrl}
-                            alt={responsibleName}
-                            className="avatar"
-                          />
-                        ) : (
-                          <div className="avatar-initials" title={responsibleName}>
-                            {responsibleName !== "—" ? getInitials(responsibleName) : "?"}
-                          </div>
-                        )}
-                        <span>{responsibleName}</span>
-                      </div>
-                    </td>
-
-                    {/* NOTES */}
-                    <td style={{ textAlign: "right", color: "#888", fontStyle: m.notes ? "normal" : "italic" }}>
-                      {m.notes ?? ""}
+              </thead>
+              <tbody>
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={
+                      !params.ingredientId ? 8 : 
+                      isSingleIngredient ? 8 : 
+                      7
+                    } style={{ textAlign: "center", color: "#999", padding: "32px 0" }}>
+                      Sin movimientos en este periodo.
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                )}
+                {pagedRows.map((m) => {
+                  const mt = m.movement_type.toUpperCase();
+                  const isEntrada = mt === "IN";
+                  const isAjuste = mt === "ADJUSTMENT";
+                  const qty = Number(m.quantity);
+                  const responsibleName = m.responsible?.full_name ?? "—";
+                  const avatarUrl = m.responsible?.image_url ?? null;
+
+                  return (
+                    <tr key={m.id}>
+                      {/* DATE */}
+                      <td style={{ whiteSpace: "pre-line", color: "#6b5030", fontSize: 12, textAlign: "left" }}>
+                        {formatDate(m.created_at)}
+                      </td>
+
+                      {/* INGREDIENT */}
+                      {!params.ingredientId && (
+                        <td style={{ color: "#2a1f0f", fontWeight: 600, textAlign: "left" }}>
+                          {m.ingredient?.name ?? "—"}
+                          {m.ingredient?.unit ? (
+                            <span style={{ display: "block", fontWeight: 400, fontSize: 11, color: "#888" }}>
+                              {m.ingredient.unit}
+                            </span>
+                          ) : null}
+                        </td>
+                      )}
+
+                      {/* MOVEMENT TYPE BADGE */}
+                      <td style={{ textAlign: "center" }}>
+                        {isEntrada ? (
+                          <span className="badge badge-entrada">
+                            <span className="badge-icon">↑</span> Entrada
+                          </span>
+                        ) : isAjuste ? (
+                          <span className="badge" style={{ background: "#f0e6d8", color: "#6b5030", border: "1px solid #d4c7b0" }}>
+                            Ajuste
+                          </span>
+                        ) : (
+                          <span className="badge badge-salida">
+                            <span className="badge-icon">↓</span> Salida
+                          </span>
+                        )}
+                      </td>
+
+                      {/* REASON */}
+                      <td style={{ color: "#4a3820", textAlign: "left" }}>{m.reason ?? "—"}</td>
+
+                      {/* ENTRADA qty */}
+                      <td className={isEntrada ? "qty-entrada" : "qty-dash"}>
+                        {isEntrada ? `+${qty}` : "—"}
+                      </td>
+
+                      {/* SALIDA qty */}
+                      <td className={!isEntrada ? "qty-salida" : "qty-dash"}>
+                        {!isEntrada ? `-${qty}` : "—"}
+                      </td>
+
+                      {/* RUNNING STOCK - Only show for single ingredient */}
+                      {isSingleIngredient && (
+                        <td style={{ fontWeight: 600, textAlign: "right" }}>{m.runningStock}</td>
+                      )}
+
+                      {/* RESPONSIBLE */}
+                      <td className="center" style={{ whiteSpace: "nowrap" }}>
+                        <div className="responsible-cell">
+                          {avatarUrl ? (
+                            <img src={avatarUrl} alt={responsibleName} className="avatar" />
+                          ) : (
+                            <div className="avatar-initials" title={responsibleName}>
+                              {responsibleName !== "—" ? getInitials(responsibleName) : "?"}
+                            </div>
+                          )}
+                          <span>{responsibleName}</span>
+                        </div>
+                      </td>
+
+                      {/* NOTES */}
+                      <td style={{ textAlign: "left", color: "#888", fontStyle: m.notes ? "normal" : "italic" }}>
+                        {m.notes ?? ""}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── PAGINACIÓN (exactamente igual que en pedidos entregados) ── */}
+          {rows.length > REPORT_PAGE_SIZE && (
+            <Suspense fallback={null}>
+              <ReportPagination totalItems={rows.length} pageSize={REPORT_PAGE_SIZE} />
+            </Suspense>
+          )}
         </div>
-        {rows.length > 0 && (
-          <Suspense fallback={null}>
-            <ReportPagination totalItems={rows.length} pageSize={REPORT_PAGE_SIZE} />
-          </Suspense>
-        )}
       </div>
     </>
   );

@@ -79,7 +79,7 @@ export async function createMovement(params: {
   // ── Notificaciones de stock crítico ──
   const { data: updatedIng } = await supabase
     .from("ingredients")
-    .select("id, name, current_stock, minimum_stock")
+    .select("id, name, current_stock, minimum_stock, unit")
     .eq("id", params.ingredientId)
     .single();
 
@@ -91,7 +91,8 @@ export async function createMovement(params: {
         updatedIng.id,
         updatedIng.name,
         curr,
-        min
+        min,
+        updatedIng.unit,
       );
     } else {
       await resolveNotification(updatedIng.id);
