@@ -291,7 +291,7 @@ export default async function InventoryKardexPage({
 
         {/* ── Page header ── */}
         <div className="kardex-header" style={{ marginTop: 24 }}>
-          <h1 style={{ color: "#633b22", fontWeight: 700, fontSize: 22, margin: 0, fontFamily: "'Playfair Display', serif" }}>
+          <h1 style={{ color: "#633b22", fontWeight: 700, fontSize: 22, margin: 0, fontFamily: "'Outfit', serif" }}>
             Kárdex de Movimientos de Insumos
           </h1>
           <p style={{ color: "#6F6868", fontSize: 13, margin: "6px 0 0", fontWeight: 400 }}>
