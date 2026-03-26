@@ -77,41 +77,47 @@ export default async function AdminOrderDetailPage({
   padding: "20px 24px",
   marginBottom: 16,
 }}>
-  {/* Fila única: Cliente | Estado | Hace X */}
-  <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: "0 16px" }}>
-    <div>
-      <p style={{ fontSize: 11, color: "#999", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.05em" }}>Cliente</p>
-      <p style={{ fontWeight: 700, fontSize: 15, color: "#2a1f0f", margin: 0 }}>{order.customer_name}</p>
-    </div>
-    <div style={{ textAlign: "center" }}>
-      <p style={{ fontSize: 11, color: "#999", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Estado</p>
-      <span style={{
-        display: "inline-block",
-        padding: "3px 12px",
-        borderRadius: 99,
-        fontSize: 13,
-        fontWeight: 600,
-        background: STATUS_BADGE[order.status]?.background ?? "#f0f0f0",
-        color: STATUS_BADGE[order.status]?.color ?? "#333",
-      }}>
-        {STATUS_LABELS[order.status] ?? order.status}
-      </span>
-    </div>
-    <div style={{ textAlign: "center" }}>
-      <p style={{ fontSize: 11, color: "#999", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tiempo</p>
-      <span style={{
-        display: "inline-block",
-        padding: "3px 12px",
-        borderRadius: 99,
-        fontSize: 12,
-        fontWeight: 600,
-        background: "#FEE2E2",
-        color: "#991B1B",
-      }}>
-        {timeAgo(order.created_at)}
-      </span>
-    </div>
+  {/* Fila única: Cliente | Fecha y hora | Estado */}
+<div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", alignItems: "center", gap: "0 24px" }}>
+  <div>
+    <p style={{ fontSize: 11, color: "#999", marginBottom: 2, textTransform: "uppercase", letterSpacing: "0.05em" }}>Cliente</p>
+    <p style={{ fontWeight: 700, fontSize: 15, color: "#2a1f0f", margin: 0 }}>{order.customer_name}</p>
   </div>
+  <div style={{ textAlign: "center" }}>
+    <p style={{ fontSize: 11, color: "#999", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Fecha y hora</p>
+    <span style={{
+      display: "inline-block",
+      padding: "3px 12px",
+      borderRadius: 99,
+      fontSize: 12,
+      fontWeight: 500,
+      background: "#f5f0e8",
+      color: "#5a3e2b",
+    }}>
+      {new Date(order.created_at).toLocaleDateString("es-HN", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+        year: "numeric",
+      })}
+    </span>
+  </div>
+  <div style={{ textAlign: "center" }}>
+    <p style={{ fontSize: 11, color: "#999", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Estado</p>
+    <span style={{
+      display: "inline-block",
+      padding: "3px 12px",
+      borderRadius: 99,
+      fontSize: 13,
+      fontWeight: 600,
+      background: STATUS_BADGE[order.status]?.background ?? "#f0f0f0",
+      color: STATUS_BADGE[order.status]?.color ?? "#333",
+    }}>
+      {STATUS_LABELS[order.status] ?? order.status}
+    </span>
+  </div>
+</div>
 
   {order.cancellation_reason && (
     <div style={{ marginTop: 12, padding: "10px 14px", background: "#FEE2E2", borderRadius: 8, fontSize: 13, color: "#991B1B" }}>

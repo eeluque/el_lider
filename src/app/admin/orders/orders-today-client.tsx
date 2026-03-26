@@ -88,8 +88,8 @@ export function OrdersTodayClient({
     <div className="space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground">Pedidos de hoy</h1>
-          <p className="text-sm text-secondary">{dateLabel}</p>
+          <h1 className="outfit font-serif text-3xl font-bold text-foreground">Pedidos de hoy</h1>
+          <p className="text-xl text-secondary">{dateLabel}</p>
         </div>
         <div style={{ textAlign: "right", marginBottom: "-130px" }}>
         <p className="outfit font-serif text-3xl font-bold text-foreground">{clock.split(",").pop()?.trim()}</p>
@@ -126,8 +126,8 @@ export function OrdersTodayClient({
             <CardContent className="space-y-3 text-sm">
               <p className="text-muted-foreground">
                 {new Date(o.created_at).toLocaleString("es-HN", {
-                  day: "2-digit",
-                  month: "short",
+                  // day: "2-digit",
+                  // month: "short",
                   hour: "numeric",
                   minute: "2-digit",
                 })}{" "}

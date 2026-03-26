@@ -50,7 +50,7 @@ export function SalesSummaryReport({
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-primary/15 bg-card p-4 shadow-sm">
-          <h3 className="font-serif text-lg font-semibold">Ventas por día</h3>
+          <h3 className="outfit font-serif text-lg font-semibold">Ventas por día</h3>
           <p className="text-xs text-muted-foreground">Color según el monto del día frente al resto del periodo (alto / medio / bajo)</p>
           <div className="mt-4 h-72">
             <ResponsiveContainer width="100%" height="100%">
@@ -74,19 +74,19 @@ export function SalesSummaryReport({
           </div>
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full" style={{ backgroundColor: GREEN }} /> Mejor relación en el periodo
+              <span className="size-2 rounded-full" style={{ backgroundColor: GREEN }} /> Días de alta demanda
             </span>
             <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full" style={{ backgroundColor: AMBER }} /> Intermedio
+              <span className="size-2 rounded-full" style={{ backgroundColor: AMBER }} /> Días regulares
             </span>
             <span className="flex items-center gap-1">
-              <span className="size-2 rounded-full" style={{ backgroundColor: RED }} /> Más bajo en el periodo
+              <span className="size-2 rounded-full" style={{ backgroundColor: RED }} /> Días bajos
             </span>
           </div>
         </div>
 
         <div className="rounded-xl border border-primary/15 bg-card p-4 shadow-sm">
-          <h3 className="font-serif text-lg font-semibold">Resumen de ventas</h3>
+          <h3 className="outfit font-serif text-lg font-semibold">Resumen de ventas</h3>
           <p className="text-xs text-muted-foreground">Por día en el rango seleccionado</p>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-sm">
@@ -100,12 +100,12 @@ export function SalesSummaryReport({
                 {rowsForTable.map((r) => (
                   <tr key={rowKey(r)} className="border-b border-border/50">
                     <td className="py-2 font-medium">{r.name}</td>
-                    <td className="py-2 text-right tabular-nums">L. {r.ventas.toFixed(2)}</td>
+                    <td className="py-2 text-right tabular-nums column-money-amount">L. {r.ventas.toFixed(2)}</td>
                   </tr>
                 ))}
                 <tr className="font-bold">
                   <td className="py-3">Total</td>
-                  <td className="py-3 text-right">L. {total.toFixed(2)}</td>
+                  <td className="py-3 text-right column-money-amount">L. {total.toFixed(2)}</td>
                 </tr>
               </tbody>
             </table>
