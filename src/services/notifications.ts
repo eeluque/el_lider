@@ -32,7 +32,8 @@ export async function createCriticalStockNotification(
   ingredientId: string,
   ingredientName: string,
   currentStock: number,
-  minimumStock: number
+  minimumStock: number,
+  unit: string  // ← Agregado el parámetro unit
 ) {
   const supabase = getSupabaseAdmin();
 
@@ -51,5 +52,6 @@ export async function createCriticalStockNotification(
     ingredient_name: ingredientName,
     current_stock: currentStock,
     minimum_stock: minimumStock,
+    unit: unit,  // ← Agregado unit al insert
   });
 }

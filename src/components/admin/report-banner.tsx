@@ -23,11 +23,11 @@ export function ReportBanner({
       >
         <h1
           style={{
-            color: "#000000",
+            color: "#633b22",
             fontWeight: 700,
             fontSize: 22,
             margin: 0,
-            fontFamily: "'Playfair Display', serif",
+            fontFamily: "'Outfit', serif",
           }}
         >
           {title}

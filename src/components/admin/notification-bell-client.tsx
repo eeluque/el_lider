@@ -10,6 +10,7 @@ type Notification = {
   minimum_stock: number;
   created_at: string;
   read: boolean;
+  unit?: string; 
 };
 
 export function NotificationBellClient({ notifications }: { notifications: Notification[] }) {
@@ -109,7 +110,7 @@ export function NotificationBellClient({ notifications }: { notifications: Notif
                         Stock crítico: {n.ingredient_name}
                       </p>
                       <p style={{ margin: "3px 0 0", fontSize: 12, color: "#666" }}>
-                        Stock actual: <strong>{n.current_stock}</strong> — mínimo: <strong>{n.minimum_stock}</strong>
+                        Stock actual: <strong>{n.current_stock}</strong> {n.unit && <span style={{ fontSize: 11, color: "#888" }}>{n.unit}</span>} — mínimo: <strong>{n.minimum_stock}</strong> {n.unit && <span style={{ fontSize: 11, color: "#888" }}>{n.unit}</span>}
                       </p>
                       <p style={{ margin: "4px 0 0", fontSize: 11, color: "#e53e3e", fontWeight: 600 }}>
                         Programe una reposición inmediata
