@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -10,23 +10,23 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { submitOrder } from "./actions";
 import { CART_STORAGE_KEY, type CartItem } from "@/lib/cart-storage";
 import { useCart } from "@/components/cart/cart-context";
+import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
 
 export function CheckoutForm() {
   const { clearCart } = useCart();
   const { data: session, status } = useSession();
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart] = useState<CartItem[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = window.sessionStorage.getItem(CART_STORAGE_KEY);
+      return stored ? (JSON.parse(stored) as CartItem[]) : [];
+    } catch {
+      return [];
+    }
+  });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ orderNumber: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      const s = sessionStorage.getItem(CART_STORAGE_KEY);
-      setCart(s ? JSON.parse(s) : []);
-    } catch {
-      setCart([]);
-    }
-  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,7 +51,7 @@ export function CheckoutForm() {
         sessionStorage.removeItem(CART_STORAGE_KEY);
         clearCart();
       }
-    } catch (err) {
+    } catch {
       setError("Error al enviar el pedido.");
     }
     setLoading(false);
@@ -120,7 +120,8 @@ export function CheckoutForm() {
           name="customerName"
           required
           defaultValue={defaultName}
-          placeholder="Tu nombre"
+          onInvalid={setSpanishValidationMessage}
+          onInput={clearSpanishValidationMessage}
         />
       </div>
       <div className="space-y-2">
@@ -130,7 +131,8 @@ export function CheckoutForm() {
           name="customerPhone"
           type="tel"
           required
-          placeholder="+504 9999-0000"
+          onInvalid={setSpanishValidationMessage}
+          onInput={clearSpanishValidationMessage}
         />
       </div>
       {isGuest && (

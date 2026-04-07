@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
 
 function LoginForm() {
   const router = useRouter();
@@ -48,11 +49,25 @@ function LoginForm() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Correo</Label>
-              <Input id="email" name="email" type="email" required placeholder="tu@correo.com" />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                onInvalid={setSpanishValidationMessage}
+                onInput={clearSpanishValidationMessage}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input id="password" name="password" type="password" required placeholder="••••••••" />
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                onInvalid={setSpanishValidationMessage}
+                onInput={clearSpanishValidationMessage}
+              />
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
             <Button type="submit" className="w-full" disabled={loading}>

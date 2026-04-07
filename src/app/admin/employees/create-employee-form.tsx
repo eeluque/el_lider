@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
 
 export function CreateEmployeeForm() {
   const [state, formAction] = useActionState(createEmployee, null as CreateEmployeeState);
@@ -20,19 +21,33 @@ export function CreateEmployeeForm() {
         <form action={formAction} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="emp-email">Correo *</Label>
-            <Input id="emp-email" name="email" type="email" required placeholder="empleado@ellider.com" />
+            <Input
+              id="emp-email"
+              name="email"
+              type="email"
+              required
+              onInvalid={setSpanishValidationMessage}
+              onInput={clearSpanishValidationMessage}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="emp-password">Contraseña *</Label>
-            <Input id="emp-password" name="password" type="password" required placeholder="Mínimo 6 caracteres" />
+            <Input
+              id="emp-password"
+              name="password"
+              type="password"
+              required
+              onInvalid={setSpanishValidationMessage}
+              onInput={clearSpanishValidationMessage}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="emp-fullName">Nombre completo</Label>
-            <Input id="emp-fullName" name="fullName" placeholder="Nombre del empleado" />
+            <Input id="emp-fullName" name="fullName" onInvalid={setSpanishValidationMessage} onInput={clearSpanishValidationMessage} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="emp-phone">Teléfono</Label>
-            <Input id="emp-phone" name="phone" type="tel" placeholder="+504 9999-0000" />
+            <Input id="emp-phone" name="phone" type="tel" onInvalid={setSpanishValidationMessage} onInput={clearSpanishValidationMessage} />
           </div>
           {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
           {state?.success && <p className="text-sm font-medium text-brand-green">{state.success}</p>}

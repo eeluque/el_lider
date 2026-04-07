@@ -1,4 +1,6 @@
+import { getActiveMenuItems } from "@/services/menu";
 import { getOrdersWithItemsInRange } from "@/services/orders";
+import { CreateManualOrderForm } from "./create-manual-order-form";
 import { OrdersTodayClient } from "./orders-today-client";
 
 export default async function AdminOrdersPage({
@@ -10,7 +12,10 @@ export default async function AdminOrdersPage({
   const currentDate = params.date ?? new Date().toISOString().slice(0, 10);
   const from = `${currentDate}T00:00:00`;
   const to = `${currentDate}T23:59:59`;
-  const orders = await getOrdersWithItemsInRange(from, to);
+  const [orders, menuItems] = await Promise.all([
+    getOrdersWithItemsInRange(from, to),
+    getActiveMenuItems(),
+  ]);
   const dateLabel = new Date(currentDate + "T12:00:00").toLocaleDateString("es-HN", {
     weekday: "long",
     day: "numeric",
@@ -18,5 +23,10 @@ export default async function AdminOrdersPage({
     year: "numeric",
   });
 
-  return <OrdersTodayClient orders={orders} dateLabel={dateLabel} currentDate={currentDate} />;
+  return (
+    <div className="space-y-6">
+      <CreateManualOrderForm menuItems={menuItems} />
+      <OrdersTodayClient orders={orders} dateLabel={dateLabel} currentDate={currentDate} />
+    </div>
+  );
 }
