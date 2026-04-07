@@ -151,8 +151,6 @@ export async function registerInventoryMovement(
 
 function revalidateInventoryViews() {
   revalidatePath("/admin/inventory");
-  revalidatePath("/employee/inventory");
   revalidatePath("/admin/reports/critical-stock");
   revalidatePath("/admin/reports/inventory-kardex");
-  revalidatePath("/employee/reports/critical-stock");
 }

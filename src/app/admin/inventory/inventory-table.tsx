@@ -1,11 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { Pencil, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
 import {
   Table,
   TableBody,
@@ -14,10 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
 import type { Ingredient } from "@/types";
+import { Pencil, X } from "lucide-react";
+import { useActionState, useState } from "react";
 import { updateIngredient, type InventoryFormState } from "./actions";
 
-function EditableIngredientRow({ ingredient }: { ingredient: Ingredient }) {
+function EditableIngredientRow({ ingredient, canEdit }: { ingredient: Ingredient; canEdit: boolean }) {
   const [isEditing, setIsEditing] = useState(false);
   const [state, formAction] = useActionState(updateIngredient, null as InventoryFormState);
   const isLow = Number(ingredient.current_stock) <= Number(ingredient.minimum_stock);
@@ -25,7 +25,7 @@ function EditableIngredientRow({ ingredient }: { ingredient: Ingredient }) {
   return (
     <TableRow>
       <TableCell className="font-medium">
-        {isEditing ? (
+        {isEditing && canEdit ? (
           <form action={formAction} className="space-y-2">
             <input type="hidden" name="id" value={ingredient.id} />
             <Input name="name" defaultValue={ingredient.name} required onInvalid={setSpanishValidationMessage} onInput={clearSpanishValidationMessage} />
@@ -79,23 +79,27 @@ function EditableIngredientRow({ ingredient }: { ingredient: Ingredient }) {
         <Badge variant={isLow ? "destructive" : "secondary"}>{isLow ? "Bajo stock" : "OK"}</Badge>
       </TableCell>
       <TableCell className="w-[110px]">
-        {!isEditing ? (
-          <Button type="button" size="sm" variant="outline" onClick={() => setIsEditing(true)}>
-            <Pencil />
-            Editar
-          </Button>
+        {canEdit ? (
+          !isEditing ? (
+            <Button type="button" size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+              <Pencil />
+              Editar
+            </Button>
+          ) : (
+            <Button type="button" size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
+              <X />
+              Cerrar
+            </Button>
+          )
         ) : (
-          <Button type="button" size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
-            <X />
-            Cerrar
-          </Button>
+          <span className="text-sm text-muted-foreground">Solo lectura</span>
         )}
       </TableCell>
     </TableRow>
   );
 }
 
-export function InventoryTable({ ingredients }: { ingredients: Ingredient[] }) {
+export function InventoryTable({ ingredients, canEdit = true }: { ingredients: Ingredient[]; canEdit?: boolean }) {
   if (ingredients.length === 0) return <p className="mt-4 text-neutral-500">No hay ingredientes.</p>;
 
   return (
@@ -106,14 +110,14 @@ export function InventoryTable({ ingredients }: { ingredients: Ingredient[] }) {
             <TableHead>Nombre</TableHead>
             <TableHead>Unidad</TableHead>
             <TableHead>Stock actual</TableHead>
-            <TableHead>Mínimo</TableHead>
+            <TableHead>Minimo</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead>Acción</TableHead>
+            <TableHead>Accion</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {ingredients.map((ingredient) => (
-            <EditableIngredientRow key={ingredient.id} ingredient={ingredient} />
+            <EditableIngredientRow key={ingredient.id} ingredient={ingredient} canEdit={canEdit} />
           ))}
         </TableBody>
       </Table>

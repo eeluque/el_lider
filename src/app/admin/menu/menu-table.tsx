@@ -1,11 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { Pencil, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
 import {
   Table,
   TableBody,
@@ -14,17 +11,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
 import type { MenuItem } from "@/types";
+import { Pencil, X } from "lucide-react";
+import { useActionState, useState } from "react";
 import { updateMenuItem, type MenuItemFormState } from "./actions";
 
-function EditableMenuRow({ item }: { item: MenuItem }) {
+function EditableMenuRow({ item, canEdit }: { item: MenuItem; canEdit: boolean }) {
   const [isEditing, setIsEditing] = useState(false);
   const [state, formAction] = useActionState(updateMenuItem, null as MenuItemFormState);
 
   return (
     <TableRow>
       <TableCell className="font-medium">
-        {isEditing ? (
+        {isEditing && canEdit ? (
           <form action={formAction} className="space-y-2">
             <input type="hidden" name="id" value={item.id} />
             <Input name="name" defaultValue={item.name} required onInvalid={setSpanishValidationMessage} onInput={clearSpanishValidationMessage} />
@@ -73,24 +73,28 @@ function EditableMenuRow({ item }: { item: MenuItem }) {
         <Badge variant={item.active ? "default" : "secondary"}>{item.active ? "Activo" : "Inactivo"}</Badge>
       </TableCell>
       <TableCell className="w-[110px]">
-        {!isEditing ? (
-          <Button type="button" size="sm" variant="outline" onClick={() => setIsEditing(true)}>
-            <Pencil />
-            Editar
-          </Button>
+        {canEdit ? (
+          !isEditing ? (
+            <Button type="button" size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+              <Pencil />
+              Editar
+            </Button>
+          ) : (
+            <Button type="button" size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
+              <X />
+              Cerrar
+            </Button>
+          )
         ) : (
-          <Button type="button" size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
-            <X />
-            Cerrar
-          </Button>
+          <span className="text-sm text-muted-foreground">Solo lectura</span>
         )}
       </TableCell>
     </TableRow>
   );
 }
 
-export function MenuTable({ items }: { items: MenuItem[] }) {
-  if (items.length === 0) return <p className="mt-4 text-neutral-500">No hay items en el menú.</p>;
+export function MenuTable({ items, canEdit = true }: { items: MenuItem[]; canEdit?: boolean }) {
+  if (items.length === 0) return <p className="mt-4 text-neutral-500">No hay items en el menu.</p>;
 
   return (
     <div className="mt-4 overflow-x-auto rounded-md border">
@@ -98,15 +102,15 @@ export function MenuTable({ items }: { items: MenuItem[] }) {
         <TableHeader>
           <TableRow>
             <TableHead>Platillo</TableHead>
-            <TableHead>Categoría</TableHead>
+            <TableHead>Categoria</TableHead>
             <TableHead>Precio</TableHead>
             <TableHead>Estado</TableHead>
-            <TableHead>Acción</TableHead>
+            <TableHead>Accion</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {items.map((item) => (
-            <EditableMenuRow key={item.id} item={item} />
+            <EditableMenuRow key={item.id} item={item} canEdit={canEdit} />
           ))}
         </TableBody>
       </Table>

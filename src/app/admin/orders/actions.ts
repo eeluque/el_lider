@@ -97,8 +97,6 @@ export async function createManualOrder(
     });
 
     revalidatePath("/admin/orders");
-    revalidatePath("/employee/orders");
-
     return { success: `Pedido ${orderNumber} registrado correctamente.` };
   } catch (creationError) {
     console.error(creationError);

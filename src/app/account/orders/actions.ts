@@ -78,7 +78,7 @@ export async function cancelOwnOrder(
 
   revalidatePath("/account/orders");
   revalidatePath("/admin/orders");
-  revalidatePath("/employee/orders");
+  revalidatePath("/admin/orders");
 
   return { success: "Pedido cancelado correctamente." };
 }

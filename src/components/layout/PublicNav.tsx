@@ -27,8 +27,8 @@ export function PublicNav() {
                 </Link>
               )}
               {(session.user.role === "admin" || session.user.role === "employee") && (
-                <Link href="/employee" className="text-sm text-foreground/80 hover:underline">
-                  Empleado
+                <Link href="/admin" className="text-sm text-foreground/80 hover:underline">
+                  Panel
                 </Link>
               )}
               {session.user.role === "admin" && (
