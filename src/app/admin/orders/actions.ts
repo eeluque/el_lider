@@ -5,6 +5,14 @@ import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/db";
 import { createOrder, updateOrderStatus as updateStatus } from "@/services/orders";
 import type { OrderStatus } from "@/types";
+import {
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  PHONE_MAX_LENGTH,
+  PHONE_MIN_LENGTH,
+  hasLengthInRange,
+  isValidPhone,
+} from "@/lib/field-rules";
 
 export async function updateOrderStatus(
   orderId: string,
@@ -38,6 +46,14 @@ export async function createManualOrder(
 
   if (!customerName || !customerPhone) {
     return { error: "Nombre y teléfono son obligatorios." };
+  }
+
+  if (!hasLengthInRange(customerName, NAME_MIN_LENGTH, NAME_MAX_LENGTH)) {
+    return { error: `El nombre debe tener entre ${NAME_MIN_LENGTH} y ${NAME_MAX_LENGTH} caracteres.` };
+  }
+
+  if (!isValidPhone(customerPhone) || !hasLengthInRange(customerPhone, PHONE_MIN_LENGTH, PHONE_MAX_LENGTH)) {
+    return { error: "Ingresa un teléfono válido." };
   }
 
   if (lineIds.length === 0) {

@@ -166,16 +166,16 @@ export async function getIngredientConsumption(params: { from: string; to: strin
 
   const { data: ingRows } = await supabase.from("ingredients").select("id, name").eq("active", true);
   const ingredientsList = (ingRows ?? []) as { id: string; name: string }[];
-  const byIngredient: Record<string, { name: string; total: number }> = {};
+  const byIngredient: Record<string, { name: string; consumption: number; turnover: number }> = {};
   for (const ing of ingredientsList) {
-    byIngredient[ing.id] = { name: ing.name, total: 0 };
+    byIngredient[ing.id] = { name: ing.name, consumption: 0, turnover: 0 };
   }
   const nameToId = new Map(ingredientsList.map((i) => [i.name.trim().toLowerCase(), i.id]));
 
   const { data: movData } = await supabase
     .from("inventory_movements")
     .select("ingredient_id, quantity, movement_type, ingredient:ingredients(name)")
-    .in("movement_type", ["OUT", "ADJUSTMENT"])
+    .in("movement_type", ["IN", "OUT", "ADJUSTMENT"])
     .gte("created_at", fromIso)
     .lte("created_at", toIso)
     .order("created_at");
@@ -183,13 +183,20 @@ export async function getIngredientConsumption(params: { from: string; to: strin
   for (const r of (movData ?? []) as unknown as {
     ingredient_id: string;
     quantity: number;
+    movement_type: string;
     ingredient?: { name: string };
   }[]) {
     const id = r.ingredient_id;
     if (!byIngredient[id]) {
-      byIngredient[id] = { name: r.ingredient?.name ?? id, total: 0 };
+      byIngredient[id] = { name: r.ingredient?.name ?? id, consumption: 0, turnover: 0 };
     }
-    byIngredient[id].total += Math.abs(Number(r.quantity));
+    const quantity = Math.abs(Number(r.quantity));
+    const movementType = r.movement_type?.toUpperCase();
+    if (movementType === "IN") {
+      byIngredient[id].turnover += quantity;
+    } else if (movementType === "OUT" || movementType === "ADJUSTMENT") {
+      byIngredient[id].consumption += quantity;
+    }
   }
 
   const { data: orderData } = await supabase
@@ -211,15 +218,20 @@ export async function getIngredientConsumption(params: { from: string; to: strin
         const iid = nameToId.get(line.ingredientName.trim().toLowerCase());
         if (!iid) continue;
         if (!byIngredient[iid]) {
-          byIngredient[iid] = { name: line.ingredientName, total: 0 };
+          byIngredient[iid] = { name: line.ingredientName, consumption: 0, turnover: 0 };
         }
-        byIngredient[iid].total += line.qtyPerUnit * sold;
+        byIngredient[iid].consumption += line.qtyPerUnit * sold;
       }
     }
   }
 
   return Object.entries(byIngredient)
-    .map(([id, v]) => ({ id, name: v.name, total: v.total }))
-    .filter((x) => x.total > 0)
-    .sort((a, b) => b.total - a.total);
+    .map(([id, v]) => ({
+      id,
+      name: v.name,
+      consumption: v.consumption,
+      turnover: v.turnover,
+    }))
+    .filter((x) => x.consumption > 0 || x.turnover > 0)
+    .sort((a, b) => b.consumption - a.consumption || b.turnover - a.turnover);
 }

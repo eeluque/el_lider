@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, type ReactNode } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { currentWeekRange, last7DaysRange, todayRange } from "@/lib/date-range";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,13 +10,10 @@ import { buttonVariants } from "@/components/ui/button";
 type Props = {
   from: string;
   to: string;
-  /** Nombres de campos que el formulario ya incluye (no duplicar como hidden). */
   formFieldNames?: string[];
   className?: string;
-  /** Contenido extra dentro del mismo formulario (motivo, groupBy, ingrediente, etc.) */
   children?: ReactNode;
   submitLabel?: string;
-  /** Variante visual para alinear con la página kárdex (botones pill). */
   variant?: "admin" | "kardex";
 };
 
@@ -79,10 +76,6 @@ function PresetLinks({ variant }: { variant: "admin" | "kardex" }) {
   );
 }
 
-/**
- * Filtros de tiempo: presets + rango manual (GET). Preserva el resto de query params.
- * Envolver en `<Suspense fallback={...}>` en la página padre (useSearchParams).
- */
 export function ReportDateRangeFilters({
   from,
   to,

@@ -5,6 +5,13 @@ import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/db";
 import { createMovement } from "@/services/inventory";
 import type { InventoryMovementType } from "@/types";
+import {
+  DESCRIPTION_MAX_LENGTH,
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  UNIT_MAX_LENGTH,
+  hasLengthInRange,
+} from "@/lib/field-rules";
 
 export type InventoryFormState = { error?: string; success?: string } | null;
 
@@ -25,6 +32,14 @@ export async function createIngredient(
 
   if (!name || !unit) {
     return { error: "Nombre y unidad son obligatorios." };
+  }
+
+  if (!hasLengthInRange(name, NAME_MIN_LENGTH, NAME_MAX_LENGTH)) {
+    return { error: `El nombre debe tener entre ${NAME_MIN_LENGTH} y ${NAME_MAX_LENGTH} caracteres.` };
+  }
+
+  if (unit.length > UNIT_MAX_LENGTH) {
+    return { error: `La unidad no puede exceder ${UNIT_MAX_LENGTH} caracteres.` };
   }
 
   if (!Number.isFinite(currentStock) || currentStock < 0) {
@@ -77,6 +92,14 @@ export async function updateIngredient(
     return { error: "Nombre y unidad son obligatorios." };
   }
 
+  if (!hasLengthInRange(name, NAME_MIN_LENGTH, NAME_MAX_LENGTH)) {
+    return { error: `El nombre debe tener entre ${NAME_MIN_LENGTH} y ${NAME_MAX_LENGTH} caracteres.` };
+  }
+
+  if (unit.length > UNIT_MAX_LENGTH) {
+    return { error: `La unidad no puede exceder ${UNIT_MAX_LENGTH} caracteres.` };
+  }
+
   if (!Number.isFinite(currentStock) || currentStock < 0) {
     return { error: "El stock actual debe ser 0 o mayor." };
   }
@@ -126,6 +149,10 @@ export async function registerInventoryMovement(
 
   if (!["IN", "OUT", "ADJUSTMENT"].includes(movementType)) {
     return { error: "Selecciona un tipo de movimiento válido." };
+  }
+
+  if (reason.length > DESCRIPTION_MAX_LENGTH) {
+    return { error: `El motivo no puede exceder ${DESCRIPTION_MAX_LENGTH} caracteres.` };
   }
 
   if (!Number.isFinite(quantity) || quantity <= 0) {

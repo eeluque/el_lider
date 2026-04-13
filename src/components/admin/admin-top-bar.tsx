@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
-import { Home, Bell, User } from "lucide-react";
+import { Home, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function AdminTopBar({ notificationBell }: { notificationBell?: React.ReactNode }) {

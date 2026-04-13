@@ -10,7 +10,14 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { submitOrder } from "./actions";
 import { CART_STORAGE_KEY, type CartItem } from "@/lib/cart-storage";
 import { useCart } from "@/components/cart/cart-context";
-import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
+import { setSpanishValidationMessage, validateSpanishOnInput } from "@/lib/form-validation";
+import {
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  PHONE_MAX_LENGTH,
+  PHONE_MIN_LENGTH,
+  PHONE_PATTERN,
+} from "@/lib/field-rules";
 
 export function CheckoutForm() {
   const { clearCart } = useCart();
@@ -80,9 +87,7 @@ export function CheckoutForm() {
           <p className="text-neutral-600">
             Número de pedido: <strong>{result.orderNumber}</strong>
           </p>
-          <p className="mt-2 text-sm text-neutral-500">
-            Te contactaremos por teléfono. Gracias por tu orden.
-          </p>
+          <p className="mt-2 text-sm text-neutral-500">Te contactaremos por teléfono. Gracias por tu orden.</p>
           <Link href="/order">
             <Button className="mt-4">Hacer otro pedido</Button>
           </Link>
@@ -119,9 +124,13 @@ export function CheckoutForm() {
           id="customerName"
           name="customerName"
           required
+          autoFocus
+          minLength={NAME_MIN_LENGTH}
+          maxLength={NAME_MAX_LENGTH}
           defaultValue={defaultName}
+          autoComplete="name"
           onInvalid={setSpanishValidationMessage}
-          onInput={clearSpanishValidationMessage}
+          onInput={validateSpanishOnInput}
         />
       </div>
       <div className="space-y-2">
@@ -130,9 +139,15 @@ export function CheckoutForm() {
           id="customerPhone"
           name="customerPhone"
           type="tel"
+          inputMode="tel"
           required
+          minLength={PHONE_MIN_LENGTH}
+          maxLength={PHONE_MAX_LENGTH}
+          pattern={PHONE_PATTERN}
+          autoComplete="tel"
+          placeholder="Ej. 9999-9999"
           onInvalid={setSpanishValidationMessage}
-          onInput={clearSpanishValidationMessage}
+          onInput={validateSpanishOnInput}
         />
       </div>
       {isGuest && (

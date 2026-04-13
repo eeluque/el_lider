@@ -3,12 +3,12 @@
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
-import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
+import { setSpanishValidationMessage, validateSpanishOnInput } from "@/lib/form-validation";
 
 function LoginForm() {
   const router = useRouter();
@@ -27,10 +27,12 @@ function LoginForm() {
     const password = (form.elements.namedItem("password") as HTMLInputElement).value;
     const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
+
     if (res?.error) {
       setError("Correo o contraseña incorrectos.");
       return;
     }
+
     router.push(callbackUrl);
     router.refresh();
   }
@@ -41,9 +43,7 @@ function LoginForm() {
         <CardHeader>
           <CardTitle>Comedor El Líder</CardTitle>
           <CardDescription>Inicia sesión en tu cuenta</CardDescription>
-          {registered && (
-            <p className="text-sm text-green-600">Cuenta creada. Ya puedes iniciar sesión.</p>
-          )}
+          {registered && <p className="text-sm text-green-600">Cuenta creada. Ya puedes iniciar sesión.</p>}
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
@@ -54,8 +54,10 @@ function LoginForm() {
                 name="email"
                 type="email"
                 required
+                autoFocus
+                autoComplete="email"
                 onInvalid={setSpanishValidationMessage}
-                onInput={clearSpanishValidationMessage}
+                onInput={validateSpanishOnInput}
               />
             </div>
             <div className="space-y-2">
@@ -65,8 +67,9 @@ function LoginForm() {
                 name="password"
                 type="password"
                 required
+                autoComplete="current-password"
                 onInvalid={setSpanishValidationMessage}
-                onInput={clearSpanishValidationMessage}
+                onInput={validateSpanishOnInput}
               />
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}

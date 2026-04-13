@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth";
-import type { UserRole } from "@/types";
 import { FileBarChart, LayoutDashboard, Package, ShoppingBag, Users, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
+import { auth } from "@/lib/auth";
+import type { UserRole } from "@/types";
 
 type DashboardCard = {
   href: string;
@@ -21,7 +21,7 @@ const cards: DashboardCard[] = [
   },
   {
     href: "/admin/menu",
-    title: "Menu",
+    title: "Menú",
     desc: "Platillos y precios",
     icon: UtensilsCrossed,
     roles: ["admin", "employee"],
@@ -43,21 +43,21 @@ const cards: DashboardCard[] = [
   {
     href: "/admin/reports/delivered-orders-daily",
     title: "Pedidos entregados",
-    desc: "Seguimiento diario de ordenes",
+    desc: "Seguimiento diario de órdenes",
     icon: FileBarChart,
     roles: ["admin", "employee"],
   },
   {
     href: "/admin/reports/critical-stock",
     title: "Lista de insumos",
-    desc: "Alertas y stock critico",
+    desc: "Alertas y stock crítico",
     icon: FileBarChart,
     roles: ["admin", "employee"],
   },
   {
     href: "/admin/analytics/sales-summary",
     title: "Resumen de ventas",
-    desc: "Reportes y graficos",
+    desc: "Reportes y gráficos",
     icon: FileBarChart,
     roles: ["admin"],
   },
@@ -75,7 +75,7 @@ export default async function AdminDashboardPage() {
           <LayoutDashboard className="size-8 text-[rgb(117,59,25)]" />
           <div>
             <h1 className="font-serif text-2xl font-bold text-[rgb(117,59,25)]">Dashboard</h1>
-            <p className="text-sm text-[rgb(117,59,25)]/80">Accesos rapidos a la gestion del comedor</p>
+            <p className="text-sm text-[rgb(117,59,25)]/80">Accesos rápidos a la gestión del comedor</p>
           </div>
         </div>
       </div>

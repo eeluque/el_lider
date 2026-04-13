@@ -5,7 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
+import {
+  clearSpanishValidationMessage,
+  setSpanishValidationMessage,
+  validateSpanishOnInput,
+} from "@/lib/form-validation";
+import { DESCRIPTION_MAX_LENGTH } from "@/lib/field-rules";
 import { registerInventoryMovement, type InventoryFormState } from "./actions";
 import type { Ingredient } from "@/types";
 
@@ -34,6 +39,7 @@ export function InventoryMovementForm({
               id="movement-ingredient"
               name="ingredientId"
               required
+              autoFocus
               defaultValue=""
               onInvalid={setSpanishValidationMessage}
               onChange={clearSpanishValidationMessage}
@@ -77,19 +83,23 @@ export function InventoryMovementForm({
               step="0.001"
               required
               onInvalid={setSpanishValidationMessage}
-              onInput={clearSpanishValidationMessage}
+              onInput={validateSpanishOnInput}
             />
           </div>
 
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="movement-reason">Motivo</Label>
-            <Input id="movement-reason" name="reason" onInvalid={setSpanishValidationMessage} onInput={clearSpanishValidationMessage} />
+            <Input
+              id="movement-reason"
+              name="reason"
+              maxLength={DESCRIPTION_MAX_LENGTH}
+              onInvalid={setSpanishValidationMessage}
+              onInput={validateSpanishOnInput}
+            />
           </div>
 
           {state?.error && <p className="text-sm text-destructive md:col-span-2">{state.error}</p>}
-          {state?.success && (
-            <p className="text-sm font-medium text-brand-green md:col-span-2">{state.success}</p>
-          )}
+          {state?.success && <p className="text-sm font-medium text-brand-green md:col-span-2">{state.success}</p>}
 
           <div className="md:col-span-2">
             <Button type="submit">Guardar movimiento</Button>

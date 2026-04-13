@@ -38,7 +38,7 @@ async function seed() {
     .select("id")
     .single();
 
-  const { data: emp1 } = await supabase
+  await supabase
     .from("users")
     .insert({
       email: "empleado1@ellider.com",

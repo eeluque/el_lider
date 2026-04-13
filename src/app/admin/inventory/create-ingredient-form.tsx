@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
+import { setSpanishValidationMessage, validateSpanishOnInput } from "@/lib/form-validation";
+import { NAME_MAX_LENGTH, NAME_MIN_LENGTH, UNIT_MAX_LENGTH } from "@/lib/field-rules";
 import { createIngredient, type InventoryFormState } from "./actions";
 
 export function CreateIngredientForm() {
@@ -27,8 +28,11 @@ export function CreateIngredientForm() {
               id="ingredient-name"
               name="name"
               required
+              autoFocus
+              minLength={NAME_MIN_LENGTH}
+              maxLength={NAME_MAX_LENGTH}
               onInvalid={setSpanishValidationMessage}
-              onInput={clearSpanishValidationMessage}
+              onInput={validateSpanishOnInput}
             />
           </div>
 
@@ -38,8 +42,10 @@ export function CreateIngredientForm() {
               id="ingredient-unit"
               name="unit"
               required
+              maxLength={UNIT_MAX_LENGTH}
+              placeholder="Ej. lb, kg, unidad"
               onInvalid={setSpanishValidationMessage}
-              onInput={clearSpanishValidationMessage}
+              onInput={validateSpanishOnInput}
             />
           </div>
 
@@ -53,7 +59,7 @@ export function CreateIngredientForm() {
               step="0.001"
               required
               onInvalid={setSpanishValidationMessage}
-              onInput={clearSpanishValidationMessage}
+              onInput={validateSpanishOnInput}
             />
           </div>
 
@@ -67,7 +73,7 @@ export function CreateIngredientForm() {
               step="0.001"
               required
               onInvalid={setSpanishValidationMessage}
-              onInput={clearSpanishValidationMessage}
+              onInput={validateSpanishOnInput}
             />
           </div>
 
@@ -77,9 +83,7 @@ export function CreateIngredientForm() {
           </label>
 
           {state?.error && <p className="text-sm text-destructive md:col-span-2">{state.error}</p>}
-          {state?.success && (
-            <p className="text-sm font-medium text-brand-green md:col-span-2">{state.success}</p>
-          )}
+          {state?.success && <p className="text-sm font-medium text-brand-green md:col-span-2">{state.success}</p>}
 
           <div className="md:col-span-2">
             <Button type="submit">Guardar insumo</Button>

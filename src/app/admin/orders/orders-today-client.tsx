@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useEffect } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import type { OrderStatus, OrderWithItems } from "@/types";
 
 const TABS: { key: OrderStatus | "all"; label: string }[] = [
@@ -35,30 +35,31 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
 export function OrdersTodayClient({
   orders,
   dateLabel,
-  currentDate,
 }: {
   orders: OrderWithItems[];
   dateLabel: string;
   currentDate: string;
 }) {
   const [tab, setTab] = useState<OrderStatus | "all">("all");
-
   const [clock, setClock] = useState("");
 
   useEffect(() => {
     function tick() {
-      setClock(new Date().toLocaleString("es-HN", {
-        timeZone: "America/Tegucigalpa",
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      }));
+      setClock(
+        new Date().toLocaleString("es-HN", {
+          timeZone: "America/Tegucigalpa",
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        })
+      );
     }
+
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
@@ -73,15 +74,13 @@ export function OrdersTodayClient({
       delivered: 0,
       cancelled: 0,
     };
-    for (const o of orders) {
-      c[o.status]++;
-    }
+    for (const order of orders) c[order.status]++;
     return c;
   }, [orders]);
 
   const filtered = useMemo(() => {
     if (tab === "all") return orders;
-    return orders.filter((o) => o.status === tab);
+    return orders.filter((order) => order.status === tab);
   }, [orders, tab]);
 
   return (
@@ -91,9 +90,9 @@ export function OrdersTodayClient({
           <h1 className="outfit font-serif text-3xl font-bold text-foreground">Pedidos de hoy</h1>
           <p className="text-xl text-secondary">{dateLabel}</p>
         </div>
-        <div style={{ textAlign: "right", marginBottom: "-130px" }}>
-        <p className="outfit font-serif text-3xl font-bold text-foreground">{clock.split(",").pop()?.trim()}</p>
-  </div>
+        <div className="text-right">
+          <p className="outfit font-serif text-3xl font-bold text-foreground">{clock.split(",").pop()?.trim()}</p>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -117,41 +116,37 @@ export function OrdersTodayClient({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {filtered.map((o) => (
-          <Card key={o.id} className="overflow-hidden border-primary/15 shadow-md">
+        {filtered.map((order) => (
+          <Card key={order.id} className="overflow-hidden border-primary/15 shadow-md">
             <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
-              <span className="font-mono text-sm font-semibold text-foreground">Orden #{o.order_number}</span>
-              <Badge className={`${STATUS_STYLE[o.status]} border`}>{STATUS_LABEL[o.status]}</Badge>
+              <span className="font-mono text-sm font-semibold text-foreground">Orden #{order.order_number}</span>
+              <Badge className={`${STATUS_STYLE[order.status]} border`}>{STATUS_LABEL[order.status]}</Badge>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <p className="text-muted-foreground">
-                {new Date(o.created_at).toLocaleString("es-HN", {
-                  // day: "2-digit",
-                  // month: "short",
+                {new Date(order.created_at).toLocaleString("es-HN", {
                   hour: "numeric",
                   minute: "2-digit",
                 })}{" "}
-                · <span className="font-medium text-foreground">{o.customer_name}</span>
+                · <span className="font-medium text-foreground">{order.customer_name}</span>
               </p>
               <ul className="space-y-1 border-t border-border pt-2">
-                {o.order_items?.map((line) => (
+                {order.order_items?.map((line) => (
                   <li key={line.id} className="flex justify-between gap-2">
                     <span>
                       ×{line.quantity} {(line as { menu_item?: { name: string } }).menu_item?.name ?? "Ítem"}
                     </span>
-                    <span className="text-muted-foreground">
-                      L. {Number(line.subtotal).toFixed(2)}
-                    </span>
+                    <span className="text-muted-foreground">L. {Number(line.subtotal).toFixed(2)}</span>
                   </li>
                 ))}
               </ul>
             </CardContent>
             <CardFooter className="flex justify-between border-t bg-muted/30 py-3 font-semibold">
               <span>Total</span>
-              <span>L. {Number(o.total_price).toFixed(2)}</span>
+              <span>L. {Number(order.total_price).toFixed(2)}</span>
             </CardFooter>
             <div className="px-4 pb-4">
-              <Link href={`/admin/orders/${o.id}`} className="block">
+              <Link href={`/admin/orders/${order.id}`} className="block">
                 <Button variant="outline" size="sm" className="w-full">
                   Ver detalle
                 </Button>

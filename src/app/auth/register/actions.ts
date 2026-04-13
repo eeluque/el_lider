@@ -1,8 +1,19 @@
 "use server";
 
 import { hash } from "bcryptjs";
-import { getSupabaseAdmin } from "@/lib/db";
 import { redirect } from "next/navigation";
+import { getSupabaseAdmin } from "@/lib/db";
+import {
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  PHONE_MAX_LENGTH,
+  PHONE_MIN_LENGTH,
+  hasLengthInRange,
+  isValidEmail,
+  isValidPhone,
+} from "@/lib/field-rules";
 
 export type RegisterState = { error?: string } | null;
 
@@ -10,16 +21,29 @@ export async function registerCustomer(
   _prev: RegisterState,
   formData: FormData
 ): Promise<RegisterState> {
-  const email = (formData.get("email") as string)?.trim()?.toLowerCase();
-  const password = formData.get("password") as string;
-  const fullName = (formData.get("fullName") as string)?.trim();
-  const phone = (formData.get("phone") as string)?.trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
 
   if (!email || !password) {
-    return { error: "Email y contraseña son requeridos." };
+    return { error: "Correo y contraseña son obligatorios." };
   }
-  if (password.length < 6) {
-    return { error: "La contraseña debe tener al menos 6 caracteres." };
+
+  if (!isValidEmail(email)) {
+    return { error: "Ingresa un correo válido." };
+  }
+
+  if (fullName && !hasLengthInRange(fullName, NAME_MIN_LENGTH, NAME_MAX_LENGTH)) {
+    return { error: `El nombre debe tener entre ${NAME_MIN_LENGTH} y ${NAME_MAX_LENGTH} caracteres.` };
+  }
+
+  if (phone && (!isValidPhone(phone) || !hasLengthInRange(phone, PHONE_MIN_LENGTH, PHONE_MAX_LENGTH))) {
+    return { error: "Ingresa un teléfono válido." };
+  }
+
+  if (!hasLengthInRange(password, PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH)) {
+    return { error: `La contraseña debe tener entre ${PASSWORD_MIN_LENGTH} y ${PASSWORD_MAX_LENGTH} caracteres.` };
   }
 
   const supabase = getSupabaseAdmin();

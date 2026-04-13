@@ -173,13 +173,19 @@ describe("reports service", () => {
     expect(r.movements[1].balance).toBe(7);
   });
 
-  it("getIngredientConsumption agrupa salidas OUT y ordena por total", async () => {
+  it("getIngredientConsumption separa consumo y rotacion por insumo", async () => {
     setResponseQueue([
       q([
         { id: "i1", name: "Arroz" },
         { id: "i2", name: "Frijol" },
       ]),
       q([
+        {
+          ingredient_id: "i1",
+          quantity: 4,
+          movement_type: "IN",
+          ingredient: { name: "Arroz" },
+        },
         {
           ingredient_id: "i1",
           quantity: 5,
@@ -196,9 +202,10 @@ describe("reports service", () => {
       q([]),
     ]);
     const r = await getIngredientConsumption({ from: "2025-01-01", to: "2025-01-31" });
-    expect(r[0].total).toBe(10);
+    expect(r[0].consumption).toBe(10);
     expect(r[0].name).toBe("Frijol");
-    expect(r[1].total).toBe(5);
+    expect(r[1].consumption).toBe(5);
+    expect(r[1].turnover).toBe(4);
   });
 
   it("getIngredientConsumption usa id si no hay nombre de ingrediente", async () => {
@@ -217,5 +224,35 @@ describe("reports service", () => {
     ]);
     const r = await getIngredientConsumption({ from: "2025-01-01", to: "2025-01-31" });
     expect(r[0].name).toBe("i99");
+    expect(r[0].consumption).toBe(1);
+  });
+
+  it("getIngredientConsumption suma recetas de menu al consumo sin afectar la rotacion", async () => {
+    setResponseQueue([
+      q([{ id: "i1", name: "Harina" }]),
+      q([
+        {
+          ingredient_id: "i1",
+          quantity: 3,
+          movement_type: "IN",
+          ingredient: { name: "Harina" },
+        },
+      ]),
+      q([
+        {
+          order_items: [
+            {
+              quantity: 2,
+              menu_item: { name: "Baleada sencilla" },
+            },
+          ],
+        },
+      ]),
+    ]);
+    const r = await getIngredientConsumption({ from: "2025-01-01", to: "2025-01-31" });
+    expect(r).toHaveLength(1);
+    expect(r[0].name).toBe("Harina");
+    expect(r[0].consumption).toBeCloseTo(0.16);
+    expect(r[0].turnover).toBe(3);
   });
 });

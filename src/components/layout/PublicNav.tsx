@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 
 export function PublicNav() {
@@ -29,11 +29,6 @@ export function PublicNav() {
               {(session.user.role === "admin" || session.user.role === "employee") && (
                 <Link href="/admin" className="text-sm text-foreground/80 hover:underline">
                   Panel
-                </Link>
-              )}
-              {session.user.role === "admin" && (
-                <Link href="/admin" className="text-sm text-foreground/80 hover:underline">
-                  Admin
                 </Link>
               )}
               <Button type="button" variant="ghost" size="sm" onClick={() => signOut({ callbackUrl: "/" })}>

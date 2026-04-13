@@ -12,36 +12,17 @@ export function ReportBanner({
   className?: string;
 }) {
   return (
-    <div className={className} style={{ width: "100%" }}>
-      {/* ── Cuadrado dorado ── */}
-      <div
-        style={{
-          background: "#eeba54",
-          padding: "18px 24px 14px",
-          textAlign: "center",
-        }}
-      >
-        <h1
-          style={{
-            color: "#633b22",
-            fontWeight: 700,
-            fontSize: 22,
-            margin: 0,
-            fontFamily: "'Outfit', serif",
-          }}
-        >
-          {title}
-        </h1>
-        {subtitle && (
-          <p style={{ color: "#6F6868", fontSize: 13, margin: "6px 0 0", fontWeight: 400 }}>
-            {subtitle}
-          </p>
-        )}
-        {right && <div style={{ marginTop: 8 }}>{right}</div>}
+    <div className={className}>
+      <div className="rounded-t-2xl bg-[#eeba54] px-6 py-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="text-center lg:text-left">
+            <h1 className="font-serif text-2xl font-bold text-[#633b22]">{title}</h1>
+            {subtitle ? <p className="mt-1 text-sm text-[#6F6868]">{subtitle}</p> : null}
+          </div>
+          {right ? <div className="flex justify-center lg:justify-end">{right}</div> : null}
+        </div>
       </div>
-
-      {/* ── Línea dorada ── */}
-      <div style={{ borderTop: "3.5px solid #F1B53E", margin: "8px 0 0 0" }} />
+      <div className="mt-2 border-t-[3.5px] border-[#F1B53E]" />
     </div>
   );
 }

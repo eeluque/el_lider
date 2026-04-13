@@ -1,10 +1,19 @@
 "use client";
 
-import type { UserRole } from "@/types";
-import { FileBarChart, LayoutDashboard, LogOut, Package, ShoppingBag, Users, UtensilsCrossed } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import {
+  FileBarChart,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  ShoppingBag,
+  Users,
+  UtensilsCrossed,
+} from "lucide-react";
+import type { UserRole } from "@/types";
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
 type AdminNavRole = "admin" | "employee";
@@ -17,12 +26,12 @@ const main: NavItem[] = [
 
 const manageByRole: Record<AdminNavRole, NavItem[]> = {
   admin: [
-    { href: "/admin/menu", label: "Menu", icon: UtensilsCrossed },
+    { href: "/admin/menu", label: "Menú", icon: UtensilsCrossed },
     { href: "/admin/inventory", label: "Inventario", icon: Package },
     { href: "/admin/employees", label: "Empleados", icon: Users },
   ],
   employee: [
-    { href: "/admin/menu", label: "Menu", icon: UtensilsCrossed },
+    { href: "/admin/menu", label: "Menú", icon: UtensilsCrossed },
     { href: "/admin/inventory", label: "Inventario", icon: Package },
   ],
 };
@@ -33,7 +42,7 @@ const reportsByRole: Record<AdminNavRole, NavItem[]> = {
     { href: "/admin/reports/inventory-kardex", label: "Kardex", icon: FileBarChart },
     { href: "/admin/reports/critical-stock", label: "Lista de insumos", icon: FileBarChart },
     { href: "/admin/analytics/sales-summary", label: "Resumen de ventas", icon: FileBarChart },
-    { href: "/admin/analytics/top-dishes", label: "Platillos mas vendidos", icon: FileBarChart },
+    { href: "/admin/analytics/top-dishes", label: "Platillos más vendidos", icon: FileBarChart },
     { href: "/admin/analytics/ingredient-consumption", label: "Consumo de insumos", icon: FileBarChart },
     { href: "/admin/reports/cancelled-orders", label: "Pedidos cancelados", icon: FileBarChart },
   ],
@@ -79,15 +88,22 @@ export function AdminSidebar({ role }: { role?: UserRole }) {
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-[rgb(117,59,25)]/10 bg-primary py-6">
       <Link href="/admin" className="mb-8 flex flex-col items-center px-5 text-center">
-        <img src="/images/logo-el-lider.png" alt="Comedor El Lider" width={110} height={110} className="rounded-full" />
+        <Image
+          src="/images/logo-el-lider.png"
+          alt="Comedor El Líder"
+          width={110}
+          height={110}
+          className="rounded-full"
+          priority
+        />
         <div>
-          <p className="font-serif text-lg font-bold leading-tight text-[rgb(117,59,25)]">Comedor El Lider</p>
+          <p className="font-serif text-lg font-bold leading-tight text-[rgb(117,59,25)]">Comedor El Líder</p>
           <p className="text-xs text-[rgb(117,59,25)]/70">Panel administrativo</p>
         </div>
       </Link>
       <div className="flex-1 overflow-y-auto px-3">
         <NavBlock title="Principal" items={main} />
-        <NavBlock title="Gestion" items={manageByRole[navRole]} />
+        <NavBlock title="Gestión" items={manageByRole[navRole]} />
         <NavBlock title="Reportes" items={reportsByRole[navRole]} />
       </div>
       <div className="mt-auto border-t border-[rgb(117,59,25)]/15 px-3 pt-4">
@@ -97,7 +113,7 @@ export function AdminSidebar({ role }: { role?: UserRole }) {
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-[rgb(117,59,25)] hover:bg-white/40"
         >
           <LogOut className="size-5" />
-          Cerrar sesion
+          Cerrar sesión
         </button>
       </div>
     </aside>

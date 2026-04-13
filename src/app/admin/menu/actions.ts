@@ -3,6 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/db";
+import {
+  CATEGORY_MAX_LENGTH,
+  DESCRIPTION_MAX_LENGTH,
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  hasLengthInRange,
+} from "@/lib/field-rules";
 
 export type MenuItemFormState = { error?: string; success?: string } | null;
 
@@ -21,8 +28,16 @@ export async function createMenuItem(
   const priceValue = Number(formData.get("price"));
   const active = formData.get("active") === "on";
 
-  if (!name) {
-    return { error: "El nombre del platillo es obligatorio." };
+  if (!hasLengthInRange(name, NAME_MIN_LENGTH, NAME_MAX_LENGTH)) {
+    return { error: `El nombre del platillo debe tener entre ${NAME_MIN_LENGTH} y ${NAME_MAX_LENGTH} caracteres.` };
+  }
+
+  if (category.length > CATEGORY_MAX_LENGTH) {
+    return { error: `La categoría no puede exceder ${CATEGORY_MAX_LENGTH} caracteres.` };
+  }
+
+  if (description.length > DESCRIPTION_MAX_LENGTH) {
+    return { error: `La descripción no puede exceder ${DESCRIPTION_MAX_LENGTH} caracteres.` };
   }
 
   if (!Number.isFinite(priceValue) || priceValue <= 0) {
@@ -70,8 +85,16 @@ export async function updateMenuItem(
     return { error: "No se encontró el platillo a editar." };
   }
 
-  if (!name) {
-    return { error: "El nombre del platillo es obligatorio." };
+  if (!hasLengthInRange(name, NAME_MIN_LENGTH, NAME_MAX_LENGTH)) {
+    return { error: `El nombre del platillo debe tener entre ${NAME_MIN_LENGTH} y ${NAME_MAX_LENGTH} caracteres.` };
+  }
+
+  if (category.length > CATEGORY_MAX_LENGTH) {
+    return { error: `La categoría no puede exceder ${CATEGORY_MAX_LENGTH} caracteres.` };
+  }
+
+  if (description.length > DESCRIPTION_MAX_LENGTH) {
+    return { error: `La descripción no puede exceder ${DESCRIPTION_MAX_LENGTH} caracteres.` };
   }
 
   if (!Number.isFinite(priceValue) || priceValue <= 0) {

@@ -1,5 +1,6 @@
-import { auth } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
+import { auth } from "@/lib/auth";
+import { INVENTORY_MOVEMENT_LABELS } from "@/lib/labels";
 import { getIngredients, getInventoryMovements } from "@/services/inventory";
 import { CreateIngredientForm } from "./create-ingredient-form";
 import { InventoryMovementForm } from "./inventory-movement-form";
@@ -30,7 +31,7 @@ export default async function AdminInventoryPage() {
       <section className="space-y-3">
         <div>
           <h2 className="text-lg font-semibold">Movimientos recientes</h2>
-          <p className="text-sm text-muted-foreground">Ultimos registros de entradas, salidas y ajustes.</p>
+          <p className="text-sm text-muted-foreground">Últimos registros de entradas, salidas y ajustes.</p>
         </div>
 
         <div className="overflow-x-auto rounded-md border">
@@ -55,7 +56,7 @@ export default async function AdminInventoryPage() {
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={movement.movement_type === "OUT" ? "destructive" : "secondary"}>
-                      {movement.movement_type}
+                      {INVENTORY_MOVEMENT_LABELS[movement.movement_type]}
                     </Badge>
                   </td>
                   <td className="px-4 py-3">{Number(movement.quantity)}</td>
@@ -65,7 +66,7 @@ export default async function AdminInventoryPage() {
               {movements.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                    Aun no hay movimientos registrados.
+                    Aún no hay movimientos registrados.
                   </td>
                 </tr>
               )}

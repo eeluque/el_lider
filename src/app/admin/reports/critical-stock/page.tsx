@@ -1,10 +1,10 @@
+import { Suspense } from "react";
+import { Button } from "@/components/ui/button";
 import { getIngredients } from "@/services/inventory";
 import { ReportBanner } from "@/components/admin/report-banner";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
-import { Button } from "@/components/ui/button";
 import { ReportPagination } from "@/components/admin/report-pagination";
 import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
-import { Suspense } from "react";
 
 export default async function CriticalStockPage({
   searchParams,
@@ -15,7 +15,6 @@ export default async function CriticalStockPage({
   const page = parseReportPage(params.page);
 
   const ingredients = await getIngredients(true);
-
   const sorted = [...ingredients].sort((a, b) => {
     const aCurr = Number(a.current_stock);
     const aMin = Number(a.minimum_stock);
@@ -23,51 +22,56 @@ export default async function CriticalStockPage({
     const bMin = Number(b.minimum_stock);
     const aLow = aCurr <= aMin;
     const bLow = bCurr <= bMin;
+
     if (aLow && !bLow) return -1;
     if (!aLow && bLow) return 1;
-    if (aLow && bLow) return aCurr - bCurr;
     return aCurr - bCurr;
   });
 
   const paged = paginateSlice(sorted, page, REPORT_PAGE_SIZE);
+  const exportRows = sorted.map((ingredient) => {
+    const current = Number(ingredient.current_stock);
+    const minimum = Number(ingredient.minimum_stock);
+    const low = current <= minimum;
 
-  const exportRows = sorted.map((i) => {
-    const curr = Number(i.current_stock);
-    const min = Number(i.minimum_stock);
-    const low = curr <= min;
     return {
-      Ingrediente: i.name,
-      Unidad: i.unit,
-      "Stock actual": curr,
-      "Stock mínimo": min,
-      Estado: low ? "Bajo — reponer" : "OK",
+      Ingrediente: ingredient.name,
+      Unidad: ingredient.unit,
+      "Stock actual": current,
+      "Stock mínimo": minimum,
+      Estado: low ? "Bajo – reponer" : "OK",
     };
   });
 
-  const today = new Date().toISOString().slice(0, 10); // "2026-03-25"
+  const today = new Date().toISOString().slice(0, 10);
+
   return (
     <div className="space-y-6">
-      <div>
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+      <ReportBanner
+        title="Lista de insumos"
+        subtitle={new Date().toLocaleDateString("es-HN", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}
+        right={
           <ReportExportButtons
-            title="Lista de Insumos"
+            title="Lista de insumos"
             rows={exportRows}
             from={today}
             to={today}
             subtitlePrefix="Hoy"
           />
-        </div>
-        <ReportBanner
-          title="Lista de Insumos"
-          subtitle={new Date().toLocaleDateString("es-HN", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })}
-        />
-      </div>
+        }
+      />
 
       <div className="overflow-hidden rounded-xl border border-primary/15 bg-card shadow-sm">
+        <div className="border-b border-primary/10 bg-card px-5 py-4">
+          <h2 className="font-serif text-lg font-semibold text-foreground">Stock crítico</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Insumos con existencias iguales o por debajo del mínimo definido.
+          </p>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -80,20 +84,22 @@ export default async function CriticalStockPage({
               </tr>
             </thead>
             <tbody>
-              {paged.map((i, idx) => {
-                const curr = Number(i.current_stock);
-                const min = Number(i.minimum_stock);
-                const low = curr <= min;
+              {paged.map((ingredient, idx) => {
+                const current = Number(ingredient.current_stock);
+                const minimum = Number(ingredient.minimum_stock);
+                const low = current <= minimum;
+
                 return (
                   <tr
-                    key={i.id}
-                    className={`border-b border-border/60 last:border-0 ${low ? "bg-red-50/50 dark:bg-red-950/20" : idx % 2 === 1 ? "bg-muted/40" : "bg-card"
-                      }`}
+                    key={ingredient.id}
+                    className={`border-b border-border/60 last:border-0 ${
+                      low ? "bg-red-50/50 dark:bg-red-950/20" : idx % 2 === 1 ? "bg-muted/40" : "bg-card"
+                    }`}
                   >
-                    <td className={`p-3 font-medium ${low ? "text-destructive" : "text-foreground"}`}>{i.name}</td>
-                    <td className="p-3 text-muted-foreground">{i.unit}</td>
-                    <td className="p-3 text-right tabular-nums">{curr}</td>
-                    <td className="p-3 text-right tabular-nums">{min}</td>
+                    <td className={`p-3 font-medium ${low ? "text-destructive" : "text-foreground"}`}>{ingredient.name}</td>
+                    <td className="p-3 text-muted-foreground">{ingredient.unit}</td>
+                    <td className="p-3 text-right tabular-nums">{current}</td>
+                    <td className="p-3 text-right tabular-nums">{minimum}</td>
                     <td className="p-3 text-center">
                       {low ? (
                         <Button type="button" size="sm" variant="destructive" className="text-xs">
@@ -106,6 +112,13 @@ export default async function CriticalStockPage({
                   </tr>
                 );
               })}
+              {paged.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
+                    No hay insumos críticos en este momento.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

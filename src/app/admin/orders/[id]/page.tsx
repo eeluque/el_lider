@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOrderById, getCustomerTotalPoints } from "@/services/orders";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -19,20 +18,6 @@ const STATUS_BADGE: Record<string, { background: string; color: string }> = {
   delivered: { background: "#F1B53E33", color: "#753B19" },
   cancelled: { background: "#FEE2E2", color: "#991B1B" },
 };
-
-function timeAgo(dateStr: string): string {
-  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (diff < 60) return `Hace menos de 1 minuto`;
-  
-  const hours = Math.floor(diff / 3600);
-  const minutes = Math.floor((diff % 3600) / 60);
-  
-  if (diff < 3600) return `Hace ${minutes} ${minutes === 1 ? "minuto" : "minutos"}`;
-  
-  if (minutes === 0) return `Hace ${hours} ${hours === 1 ? "hora" : "horas"}`;
-  
-  return `Hace ${hours} ${hours === 1 ? "hora" : "horas"} y ${minutes} ${minutes === 1 ? "minuto" : "minutos"}`;
-}
 
 export default async function AdminOrderDetailPage({
   params,

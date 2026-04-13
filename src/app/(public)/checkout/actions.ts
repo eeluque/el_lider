@@ -4,14 +4,30 @@ import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/db";
 import { createOrder } from "@/services/orders";
 import type { CartItem } from "@/lib/cart-storage";
+import {
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  PHONE_MAX_LENGTH,
+  PHONE_MIN_LENGTH,
+  hasLengthInRange,
+  isValidPhone,
+} from "@/lib/field-rules";
 
 export async function submitOrder(formData: FormData): Promise<{ error?: string; orderNumber?: string }> {
   const itemsJson = formData.get("items");
-  const customerName = (formData.get("customerName") as string)?.trim();
-  const customerPhone = (formData.get("customerPhone") as string)?.trim();
+  const customerName = String(formData.get("customerName") ?? "").trim();
+  const customerPhone = String(formData.get("customerPhone") ?? "").trim();
 
   if (!customerName || !customerPhone) {
-    return { error: "Nombre y teléfono son requeridos." };
+    return { error: "Nombre y teléfono son obligatorios." };
+  }
+
+  if (!hasLengthInRange(customerName, NAME_MIN_LENGTH, NAME_MAX_LENGTH)) {
+    return { error: `El nombre debe tener entre ${NAME_MIN_LENGTH} y ${NAME_MAX_LENGTH} caracteres.` };
+  }
+
+  if (!isValidPhone(customerPhone) || !hasLengthInRange(customerPhone, PHONE_MIN_LENGTH, PHONE_MAX_LENGTH)) {
+    return { error: "Ingresa un teléfono válido." };
   }
 
   let cart: CartItem[];

@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
+import { setSpanishValidationMessage, validateSpanishOnInput } from "@/lib/form-validation";
+import {
+  CATEGORY_MAX_LENGTH,
+  DESCRIPTION_MAX_LENGTH,
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+} from "@/lib/field-rules";
 import { createMenuItem, type MenuItemFormState } from "./actions";
 
 export function CreateMenuItemForm() {
@@ -27,14 +33,23 @@ export function CreateMenuItemForm() {
               id="menu-name"
               name="name"
               required
+              autoFocus
+              minLength={NAME_MIN_LENGTH}
+              maxLength={NAME_MAX_LENGTH}
               onInvalid={setSpanishValidationMessage}
-              onInput={clearSpanishValidationMessage}
+              onInput={validateSpanishOnInput}
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="menu-category">Categoría</Label>
-            <Input id="menu-category" name="category" onInvalid={setSpanishValidationMessage} onInput={clearSpanishValidationMessage} />
+            <Input
+              id="menu-category"
+              name="category"
+              maxLength={CATEGORY_MAX_LENGTH}
+              onInvalid={setSpanishValidationMessage}
+              onInput={validateSpanishOnInput}
+            />
           </div>
 
           <div className="space-y-2">
@@ -47,7 +62,7 @@ export function CreateMenuItemForm() {
               step="0.01"
               required
               onInvalid={setSpanishValidationMessage}
-              onInput={clearSpanishValidationMessage}
+              onInput={validateSpanishOnInput}
             />
           </div>
 
@@ -57,8 +72,9 @@ export function CreateMenuItemForm() {
               id="menu-description"
               name="description"
               rows={3}
+              maxLength={DESCRIPTION_MAX_LENGTH}
               onInvalid={setSpanishValidationMessage}
-              onInput={clearSpanishValidationMessage}
+              onInput={validateSpanishOnInput}
               className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
@@ -69,9 +85,7 @@ export function CreateMenuItemForm() {
           </label>
 
           {state?.error && <p className="text-sm text-destructive md:col-span-2">{state.error}</p>}
-          {state?.success && (
-            <p className="text-sm font-medium text-brand-green md:col-span-2">{state.success}</p>
-          )}
+          {state?.success && <p className="text-sm font-medium text-brand-green md:col-span-2">{state.success}</p>}
 
           <div className="md:col-span-2">
             <Button type="submit">Guardar platillo</Button>

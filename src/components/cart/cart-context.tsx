@@ -29,11 +29,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>(() => readCart());
 
-  const persist = useCallback((next: CartItem[]) => {
-    setCart(next);
-    writeCart(next);
-  }, []);
-
   const add = useCallback(
     (item: MenuItem, delta = 1) => {
       setCart((prev) => {
@@ -80,11 +75,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const total = useMemo(
-    () => cart.reduce((s, i) => s + i.quantity * i.unitPrice, 0),
+    () => cart.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
     [cart]
   );
 
-  const lineCount = useMemo(() => cart.reduce((s, i) => s + i.quantity, 0), [cart]);
+  const lineCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
   const goToCheckout = useCallback(() => {
     writeCart(cart);

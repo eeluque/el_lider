@@ -1,7 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/db";
-import type { Order, OrderItem, OrderStatus, OrderWithItems } from "@/types";
+import type { Order, OrderStatus, OrderWithItems } from "@/types";
 
-/** Generate next order number (e.g. ORD-001). For prototype we use timestamp-based. */
 export function generateOrderNumber(): string {
   const n = Date.now().toString(36).toUpperCase().slice(-6);
   return `ORD-${n}`;
@@ -15,7 +14,7 @@ export async function createOrder(params: {
   items: { menuItemId: string; quantity: number; unitPrice: number }[];
 }): Promise<{ orderId: string; orderNumber: string }> {
   const supabase = getSupabaseAdmin();
-  const totalPrice = params.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+  const totalPrice = params.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
   const orderNumber = generateOrderNumber();
 
   const { data: order, error: orderError } = await supabase
@@ -35,12 +34,12 @@ export async function createOrder(params: {
 
   if (orderError || !order) throw new Error(orderError?.message ?? "Error al crear pedido");
 
-  const orderItems = params.items.map((i) => ({
+  const orderItems = params.items.map((item) => ({
     order_id: order.id,
-    menu_item_id: i.menuItemId,
-    quantity: i.quantity,
-    unit_price: i.unitPrice,
-    subtotal: i.quantity * i.unitPrice,
+    menu_item_id: item.menuItemId,
+    quantity: item.quantity,
+    unit_price: item.unitPrice,
+    subtotal: item.quantity * item.unitPrice,
   }));
 
   const { error: itemsError } = await supabase.from("order_items").insert(orderItems);
@@ -82,6 +81,7 @@ export async function getOrderById(id: string): Promise<OrderWithItems | null> {
       menu_item:menu_items(id, name, price)
     `)
     .eq("order_id", id);
+
   return {
     ...(order as Order),
     order_items: (items ?? []) as OrderWithItems["order_items"],
@@ -111,7 +111,6 @@ export async function updateOrderStatus(
   if (error) throw error;
 }
 
-/** Pedidos en un rango de fechas con ítems (una consulta) */
 export async function getOrdersWithItemsInRange(from: string, to: string): Promise<OrderWithItems[]> {
   const supabase = getSupabaseAdmin();
   const { data: orders, error } = await supabase
@@ -132,7 +131,6 @@ export async function getOrdersWithItemsInRange(from: string, to: string): Promi
   return (orders ?? []) as OrderWithItems[];
 }
 
-/** Pending = not yet delivered/cancelled */
 export async function getPendingOrders(): Promise<OrderWithItems[]> {
   const supabase = getSupabaseAdmin();
   const { data: orders } = await supabase
@@ -141,15 +139,15 @@ export async function getPendingOrders(): Promise<OrderWithItems[]> {
     .in("status", ["pending", "preparing", "ready"])
     .order("created_at", { ascending: true });
   if (!orders?.length) return [];
+
   const withItems: OrderWithItems[] = [];
-  for (const o of orders as Order[]) {
-    const full = await getOrderById(o.id);
+  for (const order of orders as Order[]) {
+    const full = await getOrderById(order.id);
     if (full) withItems.push(full);
   }
   return withItems;
 }
 
-//Puntos de fidelización
 export async function getCustomerTotalPoints(phone: string): Promise<number> {
   const supabase = getSupabaseAdmin();
   const { data } = await supabase
@@ -157,5 +155,5 @@ export async function getCustomerTotalPoints(phone: string): Promise<number> {
     .select("reward_points_earned")
     .eq("customer_phone", phone)
     .eq("status", "delivered");
-  return (data ?? []).reduce((sum, o) => sum + Number(o.reward_points_earned ?? 0), 0);
+  return (data ?? []).reduce((sum, order) => sum + Number(order.reward_points_earned ?? 0), 0);
 }

@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
+import { setSpanishValidationMessage, validateSpanishOnInput } from "@/lib/form-validation";
+import {
+  NAME_MAX_LENGTH,
+  NAME_MIN_LENGTH,
+  PHONE_MAX_LENGTH,
+  PHONE_MIN_LENGTH,
+  PHONE_PATTERN,
+} from "@/lib/field-rules";
 import type { MenuItem } from "@/types";
 import { createManualOrder, type ManualOrderFormState } from "./actions";
 
@@ -56,8 +63,11 @@ export function CreateManualOrderForm({ menuItems }: { menuItems: MenuItem[] }) 
                 id="manual-customer-name"
                 name="customerName"
                 required
+                autoFocus
+                minLength={NAME_MIN_LENGTH}
+                maxLength={NAME_MAX_LENGTH}
                 onInvalid={setSpanishValidationMessage}
-                onInput={clearSpanishValidationMessage}
+                onInput={validateSpanishOnInput}
               />
             </div>
 
@@ -68,8 +78,13 @@ export function CreateManualOrderForm({ menuItems }: { menuItems: MenuItem[] }) 
                 name="customerPhone"
                 type="tel"
                 required
+                inputMode="tel"
+                minLength={PHONE_MIN_LENGTH}
+                maxLength={PHONE_MAX_LENGTH}
+                pattern={PHONE_PATTERN}
+                placeholder="Ej. 9999-9999"
                 onInvalid={setSpanishValidationMessage}
-                onInput={clearSpanishValidationMessage}
+                onInput={validateSpanishOnInput}
               />
             </div>
           </div>
@@ -128,7 +143,7 @@ export function CreateManualOrderForm({ menuItems }: { menuItems: MenuItem[] }) 
                           quantity: Math.max(1, Number(event.target.value || 1)),
                         })
                       }
-                      onInput={clearSpanishValidationMessage}
+                      onInput={validateSpanishOnInput}
                     />
                   </div>
 
