@@ -26,7 +26,7 @@ export async function createMenuItem(
   const description = String(formData.get("description") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
   const priceValue = Number(formData.get("price"));
-  const active = formData.get("active") === "on";
+  const active = formData.get("active") === "true";
 
   if (!hasLengthInRange(name, NAME_MIN_LENGTH, NAME_MAX_LENGTH)) {
     return { error: `El nombre del platillo debe tener entre ${NAME_MIN_LENGTH} y ${NAME_MAX_LENGTH} caracteres.` };
@@ -79,7 +79,7 @@ export async function updateMenuItem(
   const description = String(formData.get("description") ?? "").trim();
   const category = String(formData.get("category") ?? "").trim();
   const priceValue = Number(formData.get("price"));
-  const active = formData.get("active") === "on";
+  const active = formData.get("active") === "true";
 
   if (!id) {
     return { error: "No se encontró el platillo a editar." };

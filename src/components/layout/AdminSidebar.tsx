@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Package,
+  PlusCircle,
   ShoppingBag,
   Users,
   UtensilsCrossed,
@@ -26,6 +27,7 @@ const main: NavItem[] = [
 
 const manageByRole: Record<AdminNavRole, NavItem[]> = {
   admin: [
+    { href: "/admin/orders/manual-orders", label: "Registrar pedido", icon: PlusCircle },
     { href: "/admin/menu", label: "Menú", icon: UtensilsCrossed },
     { href: "/admin/inventory", label: "Inventario", icon: Package },
     { href: "/admin/employees", label: "Empleados", icon: Users },

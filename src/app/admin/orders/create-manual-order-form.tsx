@@ -3,7 +3,6 @@
 import { useActionState, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { setSpanishValidationMessage, validateSpanishOnInput } from "@/lib/form-validation";
@@ -47,65 +46,71 @@ export function CreateManualOrderForm({ menuItems }: { menuItems: MenuItem[] }) 
   }
 
   return (
-    <Card className="border-primary/15 shadow-sm">
-      <CardHeader>
-        <CardTitle>Registrar pedido manual</CardTitle>
-        <CardDescription>
+    <div className="space-y-4">
+      <div>
+        <h1 className="outfit font-serif text-3xl font-bold text-foreground">Registrar Pedido</h1>
+        <p className="outfit font-serif text-lg text-muted-foreground">
           Captura pedidos recibidos por WhatsApp, llamada o atención en el comedor.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form action={formAction} className="space-y-5">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="manual-customer-name">Nombre del cliente *</Label>
-              <Input
-                id="manual-customer-name"
-                name="customerName"
-                required
-                autoFocus
-                minLength={NAME_MIN_LENGTH}
-                maxLength={NAME_MAX_LENGTH}
-                onInvalid={setSpanishValidationMessage}
-                onInput={validateSpanishOnInput}
-              />
-            </div>
+        </p>
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="manual-customer-phone">Teléfono *</Label>
-              <Input
-                id="manual-customer-phone"
-                name="customerPhone"
-                type="tel"
-                required
-                inputMode="tel"
-                minLength={PHONE_MIN_LENGTH}
-                maxLength={PHONE_MAX_LENGTH}
-                pattern={PHONE_PATTERN}
-                placeholder="Ej. 9999-9999"
-                onInvalid={setSpanishValidationMessage}
-                onInput={validateSpanishOnInput}
-              />
-            </div>
-          </div>
+      <div className="rounded-md border overflow-hidden shadow-sm mt-8">
+        {/* Header café */}
+        <div className="bg-[#753B19] px-4 py-3 flex items-center justify-between">
+          <span className="text-white font-bold uppercase tracking-wide text-medium">Detalle del pedido</span>
+        </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-medium text-foreground">Detalle del pedido</h3>
-                <p className="text-sm text-muted-foreground">Selecciona uno o más productos y su cantidad.</p>
+        {/* Contenido */}
+        <div className="bg-white p-6">
+          <form action={formAction} className="space-y-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="manual-customer-name" className="text-lg">Nombre del cliente *</Label>
+                <Input
+                  className="h-10 text-lg"
+                  id="manual-customer-name"
+                  name="customerName"
+                  required
+                  autoFocus
+                  minLength={NAME_MIN_LENGTH}
+                  maxLength={NAME_MAX_LENGTH}
+                  placeholder="Nombre y/o apellido"
+                  onInvalid={setSpanishValidationMessage}
+                  onInput={validateSpanishOnInput}
+                />
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={addLine}>
-                <Plus />
-                Agregar línea
-              </Button>
+
+              <div className="space-y-2">
+                <Label htmlFor="manual-customer-phone" className="text-lg">Teléfono *</Label>
+                <Input
+                  className="h-10 text-lg"
+                  id="manual-customer-phone"
+                  name="customerPhone"
+                  type="tel"
+                  required
+                  inputMode="tel"
+                  minLength={PHONE_MIN_LENGTH}
+                  maxLength={PHONE_MAX_LENGTH}
+                  pattern={PHONE_PATTERN}
+                  placeholder="9999-9999"
+                  onInvalid={setSpanishValidationMessage}
+                  onInput={validateSpanishOnInput}
+                />
+              </div>
             </div>
 
             <div className="space-y-3">
+              <div className="flex justify-end">
+                <Button type="button" variant="outline" size="sm"
+                  className="font-bold" onClick={addLine}>
+                  <Plus />
+                  Agregar línea
+                </Button>
+              </div>
               {lines.map((line, index) => (
                 <div key={line.id} className="grid gap-3 rounded-xl border border-border/70 bg-muted/20 p-3 md:grid-cols-[1fr_120px_auto]">
                   <div className="space-y-2">
-                    <Label htmlFor={`manual-item-${line.id}`}>Platillo #{index + 1}</Label>
+                    <Label htmlFor={`manual-item-${line.id}`} className="text-base">Platillo #{index + 1}</Label>
                     <select
                       id={`manual-item-${line.id}`}
                       name={`itemId-${line.id}`}
@@ -116,7 +121,7 @@ export function CreateManualOrderForm({ menuItems }: { menuItems: MenuItem[] }) 
                         updateLine(line.id, { menuItemId: event.target.value });
                       }}
                       onInvalid={setSpanishValidationMessage}
-                      className="h-9 w-full rounded-lg border border-input bg-transparent px-3 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                      className="h-10 w-full rounded-lg border border-input bg-transparent px-3 text-base outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                     >
                       <option value="">Selecciona un platillo</option>
                       {menuItems.map((item) => (
@@ -128,8 +133,9 @@ export function CreateManualOrderForm({ menuItems }: { menuItems: MenuItem[] }) 
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor={`manual-quantity-${line.id}`}>Cantidad</Label>
+                    <Label htmlFor={`manual-quantity-${line.id}`} className="text-base">Cantidad</Label>
                     <Input
+                      className="h-10 text-base"
                       id={`manual-quantity-${line.id}`}
                       name={`quantity-${line.id}`}
                       type="number"
@@ -161,24 +167,24 @@ export function CreateManualOrderForm({ menuItems }: { menuItems: MenuItem[] }) 
                   </div>
                 </div>
               ))}
+
+              <input type="hidden" name="lineIds" value={lines.map((line) => line.id).join(",")} />
             </div>
 
-            <input type="hidden" name="lineIds" value={lines.map((line) => line.id).join(",")} />
-          </div>
-
-          <div className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-3 text-sm">
-            <div className="flex items-center justify-between gap-4">
-              <span className="font-medium text-foreground">Total estimado</span>
-              <span className="font-semibold text-[rgb(117,59,25)]">L {total.toFixed(2)}</span>
+            <div className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-3">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-lg font-bold text-foreground">Total estimado</span>
+                <span className="text-lg font-semibold column-money-amount">L. {total.toFixed(2)}</span>
+              </div>
             </div>
-          </div>
 
-          {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
-          {state?.success && <p className="text-sm font-medium text-brand-green">{state.success}</p>}
+            {state?.error && <p className="text-base text-destructive">{state.error}</p>}
+            {state?.success && <p className="text-base font-xl text-brand-green">{state.success}</p>}
 
-          <Button type="submit">Registrar pedido</Button>
-        </form>
-      </CardContent>
-    </Card>
+            <Button type="submit" size="lg" className="bg-[#588f3b] hover:bg-[#4a7a33] text-white border-0">Registrar pedido</Button>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }
