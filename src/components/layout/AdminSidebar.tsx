@@ -33,6 +33,7 @@ const manageByRole: Record<AdminNavRole, NavItem[]> = {
     { href: "/admin/employees", label: "Empleados", icon: Users },
   ],
   employee: [
+    { href: "/admin/orders/manual-orders", label: "Registrar pedido", icon: PlusCircle },
     { href: "/admin/menu", label: "Menú", icon: UtensilsCrossed },
     { href: "/admin/inventory", label: "Inventario", icon: Package },
   ],
@@ -100,7 +101,6 @@ export function AdminSidebar({ role }: { role?: UserRole }) {
         />
         <div>
           <p className="font-serif text-lg font-bold leading-tight text-[rgb(117,59,25)]">Comedor El Líder</p>
-          <p className="text-xs text-[rgb(117,59,25)]/70">Panel administrativo</p>
         </div>
       </Link>
       <div className="flex-1 overflow-y-auto px-3">

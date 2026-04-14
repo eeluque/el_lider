@@ -1,100 +1,183 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useRef } from "react";
+import { createMenuItem, type MenuItemFormState } from "./actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { setSpanishValidationMessage, validateSpanishOnInput } from "@/lib/form-validation";
-import {
-  CATEGORY_MAX_LENGTH,
-  DESCRIPTION_MAX_LENGTH,
-  NAME_MAX_LENGTH,
-  NAME_MIN_LENGTH,
-} from "@/lib/field-rules";
-import { createMenuItem, type MenuItemFormState } from "./actions";
+import { ChevronDown, ChevronUp } from "lucide-react";
+import { DESCRIPTION_MAX_LENGTH, NAME_MAX_LENGTH } from "@/lib/field-rules";
+
+const CATEGORIES = ["Baleadas", "Bebidas", "Burritas", "Desayunos", "Almuerzos"];
+
+// Componente que clona EXACTAMENTE el look del tooltip nativo de Chrome
+function NativeStyleTooltip({ message }: { message: string }) {
+  return (
+    <div className="absolute z-50 flex flex-col items-start -bottom-[38px] left-6 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+      {/* Triangulito superior */}
+      <div className="ml-3 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-white drop-shadow-[0_-1px_1px_rgba(0,0,0,0.1)]" />
+      
+      {/* Caja del mensaje */}
+      <div className="bg-white border border-[#bcbcbc] shadow-[2px_2px_4px_rgba(0,0,0,0.2)] rounded-[2px] px-2 py-1.5 flex items-center gap-2 min-w-max">
+        {/* Icono naranja cuadrado con el ! */}
+        <div className="bg-[#ff9900] text-white flex items-center justify-center w-[18px] h-[18px] rounded-[1px] font-black text-[14px] leading-none">
+          !
+        </div>
+        <span className="text-[13px] text-[#333] font-normal leading-none">
+          {message}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export function CreateMenuItemForm() {
   const [state, formAction] = useActionState(createMenuItem, null as MenuItemFormState);
+  const [open, setOpen] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  
+  // Estado para los errores (true = se muestra el globito)
+  const [errors, setErrors] = useState({
+    name: false,
+    category: false,
+    price: false
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const form = formRef.current;
+  if (!form) return;
+
+  const formData = new FormData(form);
+  const name = formData.get("name") as string;
+  
+  // Nueva validación estricta
+  const nameRegex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/;
+  const isNameInvalid = !name.trim() || !nameRegex.test(name);
+
+  const newErrors = {
+    name: isNameInvalid,
+    category: !formData.get("category"),
+    price: !formData.get("price") || parseFloat(formData.get("price") as string) <= 0
+  };
+
+  setErrors(newErrors);
+
+  if (Object.values(newErrors).some(v => v)) {
+    e.preventDefault();
+    return;
+  }
+};
 
   return (
-    <Card className="border-primary/15 shadow-sm">
-      <CardHeader>
-        <CardTitle>Nuevo platillo</CardTitle>
-        <CardDescription>
-          Registra los productos que aparecerán disponibles para tomar pedidos.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form action={formAction} className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="menu-name">Nombre *</Label>
-            <Input
-              id="menu-name"
-              name="name"
-              required
-              autoFocus
-              minLength={NAME_MIN_LENGTH}
-              maxLength={NAME_MAX_LENGTH}
-              placeholder="Baleada sencilla"
-              onInvalid={setSpanishValidationMessage}
-              onInput={validateSpanishOnInput}
-            />
-          </div>
+    <div className="max-w-md rounded-md border overflow-hidden">
+      {/* Header colapsable */}
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-[#753B19] text-white font-bold uppercase tracking-wide text-sm"
+      >
+        <span>🍽️ Nuevo platillo</span>
+        {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+      </button>
 
-          <div className="space-y-2">
-            <Label htmlFor="menu-category">Categoría</Label>
-            <Input
-              id="menu-category"
-              name="category"
-              maxLength={CATEGORY_MAX_LENGTH}
-              placeholder="Desayunos y/o almuerzos"
-              onInvalid={setSpanishValidationMessage}
-              onInput={validateSpanishOnInput}
-            />
-          </div>
+      {open && (
+        <div className="bg-white p-4">
+          <p className="text-sm text-muted-foreground mb-4">
+            Registra los productos que aparecerán disponibles para tomar pedidos.
+          </p>
+          
+          <form 
+            ref={formRef}
+            action={formAction} 
+            onSubmit={handleSubmit}
+            className="space-y-4"
+            noValidate // Bloqueamos el nativo para usar nuestros "clones" múltiples
+          >
+            {/* NOMBRE */}
+            <div className="space-y-2 relative">
+              <Label htmlFor="menu-name" className="font-semibold">
+                Nombre <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="menu-name"
+                name="name"
+                maxLength={NAME_MAX_LENGTH} 
+                placeholder="Baleada sencilla"
+                onChange={() => setErrors(prev => ({ ...prev, name: false }))}
+                className="focus-visible:ring-[#753B19]"
+              />
+              {errors.name && <NativeStyleTooltip message="El platillo solo puede contener letras y números." />}
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="menu-price">Precio *</Label>
-            <Input
-              id="menu-price"
-              name="price"
-              type="number"
-              min="0.01"
-              step="0.01"
-              required
-              placeholder="L. 0.00"
-              onInvalid={setSpanishValidationMessage}
-              onInput={validateSpanishOnInput}
-            />
-          </div>
+            {/* CATEGORÍA */}
+            <div className="space-y-2 relative">
+              <Label htmlFor="menu-category" className="font-semibold">
+                Categoría <span className="text-red-500">*</span>
+              </Label>
+              <select
+                id="menu-category"
+                name="category"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#753B19]"
+                defaultValue=""
+                onChange={() => setErrors(prev => ({ ...prev, category: false }))}
+              >
+                <option value="" disabled>— Selecciona una categoría —</option>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+              {errors.category && <NativeStyleTooltip message="Selecciona una categoría" />}
+            </div>
 
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="menu-description">Descripción</Label>
-            <textarea
-              id="menu-description"
-              name="description"
-              rows={3}
-              maxLength={DESCRIPTION_MAX_LENGTH}
-              onInvalid={setSpanishValidationMessage}
-              onInput={validateSpanishOnInput}
-              className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            />
-          </div>
+            {/* PRECIO */}
+            <div className="space-y-2 relative">
+              <Label htmlFor="menu-price" className="font-semibold">
+                Precio <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">L.</span>
+                <Input
+                  id="menu-price"
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  className="pl-8 focus-visible:ring-[#753B19]"
+                  onChange={() => setErrors(prev => ({ ...prev, price: false }))}
+                />
+              </div>
+              {errors.price && <NativeStyleTooltip message="Ingresa un precio válido" />}
+            </div>
 
-          <label className="flex items-center gap-2 text-sm font-medium text-foreground md:col-span-2">
-            <input type="checkbox" name="active" defaultChecked className="size-4 rounded border-input" />
-            Disponible para pedidos
-          </label>
+            {/* DESCRIPCIÓN */}
+            <div className="space-y-2">
+              <Label htmlFor="menu-description" className="font-semibold">Descripción</Label>
+              <textarea
+                id="menu-description"
+                name="description"
+                rows={3}
+                maxLength={DESCRIPTION_MAX_LENGTH}
+                placeholder="Describe el platillo (opcional)"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#753B19]"
+              />
+            </div>
 
-          {state?.error && <p className="text-sm text-destructive md:col-span-2">{state.error}</p>}
-          {state?.success && <p className="text-sm font-medium text-brand-green md:col-span-2">{state.success}</p>}
+            {/* CHECKBOX ACTIVO */}
+            <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+              <input type="checkbox" name="active" defaultChecked className="size-4 rounded border-input" />
+              Disponible para pedidos
+            </label>
 
-          <div className="md:col-span-2">
-            <Button type="submit">Guardar platillo</Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+            {/* BOTÓN CON HOVER DORADO OSCURO */}
+            <Button 
+              type="submit" 
+              className="w-full bg-[#f5bf56] hover:bg-[#F1B53E] text-[#753B19] font-semibold"
+            >
+              Guardar platillo
+            </Button>
+          </form>
+        </div>
+      )}
+    </div>
   );
 }

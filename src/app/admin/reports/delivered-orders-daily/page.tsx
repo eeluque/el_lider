@@ -63,6 +63,11 @@ const periodLabel =
   const totalImport = orders.reduce((sum, order) => sum + Number(order.total_price), 0);
 
   const exportRows = orders.map((order) => ({
+    Fecha: new Date(order.created_at).toLocaleString("es-HN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    }),
     "N.º pedido": order.order_number,
     Cliente: order.customer_name,
     Productos: formatProducts(order.order_items),
@@ -73,7 +78,17 @@ const periodLabel =
   return (
     <div className="space-y-6">
       <div style={{ display: "flex", justifyContent: "flex-end", margin: "0 0 10px" }}>
-      <ReportExportButtons title="Pedidos entregados" rows={exportRows} from={from} to={to} />
+      <ReportExportButtons 
+        title="Pedidos entregados" 
+        rows={exportRows} 
+        from={from} 
+        to={to}
+        pdfColumnAlignments={{  // <--- Esto es lo que le pasas al componente
+          "Importe": "right",
+          "N.º pedido": "center",
+          "Estado": "center"
+        }}
+      />
     </div>
     <ReportBanner
       title="Pedidos entregados"
@@ -86,7 +101,7 @@ const periodLabel =
 
       <div className="overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-md">
         <div className="report-table-header flex flex-col gap-3 border-b border-primary/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="outfit font-serif text-lg font-semibold">Pedidos entregados</h2>
+          <h2 className="outfit font-serif text-lg font-semibold">Pedidos Entregados</h2>
           <p className="report-table-header-total text-right text-base font-semibold tabular-nums">
             Total: <span>L. {totalImport.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </p>
@@ -99,20 +114,37 @@ const periodLabel =
             <div className="overflow-x-auto">
               <table className="outfit report-table w-full min-w-[720px] border-collapse text-sm">
                 <thead>
-                  <tr className="report-table-columns text-left text-xs font-semibold uppercase tracking-wide">
-                    <th className="border-b border-[rgb(232,213,176)] px-4 py-3">N.º pedido</th>
-                    <th className="border-b border-[rgb(232,213,176)] px-4 py-3">Cliente</th>
-                    <th className="border-b border-[rgb(232,213,176)] px-4 py-3">Productos</th>
-                    <th className="border-b border-[rgb(232,213,176)] px-4 py-3 text-right">Importe</th>
+                  <tr className="report-table-columns text-xs font-semibold uppercase tracking-wide">
+                    <th className="border-b border-[rgb(232,213,176)] px-4 py-3 text-left">Fecha</th>
+                    <th className="border-b border-[rgb(232,213,176)] px-4 py-3 text-center">N.º pedido</th> 
+                    <th className="border-b border-[rgb(232,213,176)] px-4 py-3 text-left">Cliente</th>
+                    <th className="border-b border-[rgb(232,213,176)] px-4 py-3 text-left">Productos</th>
+                    <th className="border-b border-[rgb(232,213,176)] px-4 py-3 text-right">Importe</th> 
                   </tr>
                 </thead>
                 <tbody>
-                  {pagedOrders.map((order, index) => (
-                    <tr key={order.id} className={`border-b border-border/50 ${index % 2 === 1 ? "bg-muted/25" : "bg-card"}`}>
-                      <td className="px-4 py-4 align-top font-mono text-sm font-bold text-[rgb(117,59,25)]">#{order.order_number}</td>
-                      <td className="px-4 py-4 align-top font-semibold text-foreground">{order.customer_name}</td>
-                      <td className="max-w-[280px] px-4 py-4 align-top text-muted-foreground">{formatProducts(order.order_items)}</td>
-                      <td className="column-money-amount px-4 py-4 align-top text-right font-bold tabular-nums text-foreground">
+                  {pagedOrders.map((order, idx) => (
+                    <tr key={order.id} className={`border-b border-border/50 ${idx % 2 === 1 ? "bg-muted/25" : "bg-card"}`}>
+                      <td className="px-4 py-4 align-top text-sm text-muted-foreground whitespace-nowrap text-left">
+                        {new Date(order.created_at).toLocaleString("es-HN", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </td>
+                      <td className="px-4 py-4 align-top font-mono text-sm font-bold text-[rgb(117,59,25)] text-center">
+                        #{order.order_number}
+                      </td>
+                      <td className="px-4 py-4 align-top font-semibold text-foreground text-left">
+                        {order.customer_name}
+                      </td>
+                      <td className="max-w-[280px] px-4 py-4 align-top text-muted-foreground text-left">
+                        {formatProducts(order.order_items)}
+                      </td>
+                      <td className="column-money-amount px-4 py-4 align-top font-bold tabular-nums text-foreground text-right">
                         L. {Number(order.total_price).toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>

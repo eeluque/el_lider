@@ -22,11 +22,11 @@ export function EmployeesTable({
         </colgroup>
         <TableHeader>
           <TableRow className="bg-[#753B19] hover:bg-[#753B19]">
-            <TableHead className="text-white font-bold uppercase tracking-wide">Email</TableHead>
-            <TableHead className="text-white font-bold uppercase tracking-wide">Nombre</TableHead>
-            <TableHead className="text-white font-bold uppercase tracking-wide">Rol</TableHead>
-            <TableHead className="text-white font-bold uppercase tracking-wide">Estado</TableHead>
-            <TableHead className="text-white font-bold uppercase tracking-wide">Registro</TableHead>
+            <TableHead className="text-white font-bold uppercase tracking-wide text-center">Email</TableHead>
+            <TableHead className="text-white font-bold uppercase tracking-wide text-center">Nombre</TableHead>
+            <TableHead className="text-white font-bold uppercase tracking-wide text-center">Rol</TableHead>
+            <TableHead className="text-white font-bold uppercase tracking-wide text-center">Estado</TableHead>
+            <TableHead className="text-white font-bold uppercase tracking-wide text-center">Registro</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="bg-white">
@@ -34,13 +34,15 @@ export function EmployeesTable({
             <TableRow key={u.id}>
               <TableCell>{u.email}</TableCell>
               <TableCell>{u.full_name ?? "—"}</TableCell>
-              <TableCell><Badge>{u.role}</Badge></TableCell>
-              <TableCell>
+              <TableCell className="text-center">
+                <Badge>{u.role}</Badge>
+              </TableCell>
+              <TableCell className="text-center">
                 <Badge variant={u.active ? "default" : "secondary"}>
                   {u.active ? "Activo" : "Inactivo"}
                 </Badge>
               </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
+              <TableCell className="text-sm text-muted-foreground text-center">
                 {new Date(u.created_at).toLocaleDateString("es-HN")}
               </TableCell>
             </TableRow>

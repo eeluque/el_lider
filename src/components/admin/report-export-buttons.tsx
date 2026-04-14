@@ -14,6 +14,7 @@ type Props = {
   ingredientUnit?: string;
   subtitlePrefix?: string;
   className?: string;
+  pdfColumnAlignments?: Record<string, "left" | "center" | "right">; // ← NUEVO
 };
 
 function PdfIcon({ size = 20 }: { size?: number }) {
@@ -48,7 +49,17 @@ const EXCEL_COLOR = "rgba(241, 181, 62, 0.60)";
 const EXCEL_HOVER = "rgba(241, 181, 62, 0.80)";
 const DISABLED = "rgba(180, 180, 180, 0.50)";
 
-export function ReportExportButtons({ title, rows, from, to, ingredientLabel, ingredientUnit, className }: Props) {
+export function ReportExportButtons({ 
+  title, 
+  rows, 
+  from, 
+  to, 
+  ingredientLabel, 
+  ingredientUnit, 
+  subtitlePrefix,
+  className,
+  pdfColumnAlignments  // ← NUEVO
+}: Props) {
   const [loadingPDF, setLoadingPDF] = useState(false);
   const [loadingExcel, setLoadingExcel] = useState(false);
   const [hoverPDF, setHoverPDF] = useState(false);
@@ -70,6 +81,8 @@ export function ReportExportButtons({ title, rows, from, to, ingredientLabel, in
             to,
             ingredientLabel,
             ingredientUnit,
+            subtitlePrefix,
+            columnAlignments: pdfColumnAlignments, // ← PASAR LAS ALINEACIONES
           }
         : undefined;
 

@@ -127,7 +127,7 @@ export function OrdersTodayClient({
           const nextStatus = getNextOrderStatus(order.status);
 
           return (
-            <Card key={order.id} className="overflow-hidden border-primary/15 shadow-md">
+            <Card key={order.id} className="overflow-hidden border-primary/15 shadow-md flex flex-col">
               <CardHeader className="flex flex-row items-start justify-between gap-2 pb-2">
                 <span className="font-mono text-sm font-semibold text-foreground">Orden #{order.order_number}</span>
                 {nextStatus ? (
@@ -152,7 +152,7 @@ export function OrdersTodayClient({
                   })}{" "}
                   · <span className="font-medium text-foreground">{order.customer_name}</span>
                 </p>
-                <ul className="space-y-1 border-t border-border pt-2">
+                <ul className="space-y-1 border-t border-border pt-2 h-[120px] overflow-hidden">
                   {order.order_items?.map((line) => (
                     <li key={line.id} className="flex justify-between gap-2">
                       <span>
@@ -172,7 +172,7 @@ export function OrdersTodayClient({
                 <span>Total</span>
                 <span>L. {Number(order.total_price).toFixed(2)}</span>
               </CardFooter>
-              <div className="space-y-2 px-4 pb-4">
+              <div className="space-y-2 px-4 pb-4 mt-auto">
                 {nextStatus && (
                   <p className="text-xs text-muted-foreground">
                     Haz clic en el estado para avanzar a {getOrderStatusLabel(nextStatus)}.

@@ -25,9 +25,6 @@ export async function updateOrderStatus(
   }
   await updateStatus(orderId, status, cancellationReason);
   revalidatePath("/admin/orders");
-  revalidatePath("/admin/analytics/sales-summary");
-  revalidatePath("/admin/reports/delivered-orders-daily");
-  revalidatePath("/admin/reports/cancelled-orders");
 }
 
 export type ManualOrderFormState = { error?: string; success?: string } | null;
@@ -45,61 +42,53 @@ export async function createManualOrder(
   const customerPhone = String(formData.get("customerPhone") ?? "").trim();
   const lineIds = String(formData.get("lineIds") ?? "")
     .split(",")
-    .map((value) => value.trim())
+    .map((v) => v.trim())
     .filter(Boolean);
 
-  if (!customerName || !customerPhone) {
-    return { error: "Nombre y teléfono son obligatorios." };
-  }
+  // 1. Validaciones Básicas
+  if (!customerName || !customerPhone) return { error: "Nombre y teléfono son obligatorios." };
+  if (!hasLengthInRange(customerName, NAME_MIN_LENGTH, NAME_MAX_LENGTH)) return { error: "Nombre fuera de rango." };
+  if (!isValidPhone(customerPhone)) return { error: "Teléfono inválido." };
+  if (lineIds.length === 0) return { error: "Agrega al menos un platillo." };
 
-  if (!hasLengthInRange(customerName, NAME_MIN_LENGTH, NAME_MAX_LENGTH)) {
-    return { error: `El nombre debe tener entre ${NAME_MIN_LENGTH} y ${NAME_MAX_LENGTH} caracteres.` };
-  }
-
-  if (!isValidPhone(customerPhone) || !hasLengthInRange(customerPhone, PHONE_MIN_LENGTH, PHONE_MAX_LENGTH)) {
-    return { error: "Ingresa un teléfono válido." };
-  }
-
-  if (lineIds.length === 0) {
-    return { error: "Agrega al menos un platillo al pedido." };
-  }
-
-  const selectedLines = lineIds
-    .map((id) => {
-      const menuItemId = String(formData.get(`itemId-${id}`) ?? "").trim();
-      const quantity = Number(formData.get(`quantity-${id}`));
-      return { menuItemId, quantity };
-    })
-    .filter((line) => line.menuItemId);
+  // 2. Procesamiento de Líneas con limpieza profunda
+  const selectedLines = lineIds.map((id) => {
+    const menuItemId = String(formData.get(`itemId-${id}`) ?? "").trim();
+    const rawQty = formData.get(`quantity-${id}`);
+    const quantity = rawQty === null || rawQty === "" ? 0 : Number(rawQty);
+    return { menuItemId, quantity };
+  }).filter(line => line.menuItemId !== "");
 
   if (selectedLines.length === 0) {
     return { error: "Selecciona al menos un platillo válido." };
   }
 
-  if (selectedLines.some((line) => !Number.isFinite(line.quantity) || line.quantity <= 0)) {
+  // 3. Validación de Cantidades (Aquí es donde fallaba)
+  const hasInvalidQuantity = selectedLines.some(line => 
+    isNaN(line.quantity) || line.quantity <= 0
+  );
+
+  if (hasInvalidQuantity) {
     return { error: "Todas las cantidades deben ser mayores que 0." };
   }
 
+  // 4. Validación en Base de Datos
   const supabase = getSupabaseAdmin();
-  const uniqueIds = [...new Set(selectedLines.map((line) => line.menuItemId))];
-  const { data: menuItems, error } = await supabase
+  const uniqueIds = [...new Set(selectedLines.map((l) => l.menuItemId))];
+  const { data: menuItems, error: dbError } = await supabase
     .from("menu_items")
     .select("id, price, active")
     .in("id", uniqueIds);
 
-  if (error) {
-    console.error(error);
-    return { error: "No se pudieron validar los productos seleccionados." };
-  }
+  if (dbError) return { error: "Error al validar productos." };
 
-  const menuMap = new Map((menuItems ?? []).map((item) => [item.id, item]));
+  const menuMap = new Map((menuItems ?? []).map((m) => [m.id, m]));
   const orderItems = [];
 
   for (const line of selectedLines) {
     const item = menuMap.get(line.menuItemId);
-    if (!item || item.active === false) {
-      return { error: "Uno de los platillos seleccionados ya no está disponible." };
-    }
+    if (!item || !item.active) return { error: `El producto ${line.menuItemId} no está disponible.` };
+    
     orderItems.push({
       menuItemId: line.menuItemId,
       quantity: line.quantity,
@@ -107,6 +96,7 @@ export async function createManualOrder(
     });
   }
 
+  // 5. Creación del Pedido
   try {
     const { orderNumber } = await createOrder({
       customerId: null,
@@ -118,8 +108,7 @@ export async function createManualOrder(
 
     revalidatePath("/admin/orders");
     return { success: `Pedido ${orderNumber} registrado correctamente.` };
-  } catch (creationError) {
-    console.error(creationError);
+  } catch (e) {
     return { error: "No se pudo registrar el pedido." };
   }
 }
