@@ -13,53 +13,72 @@ import {
 } from "@/components/ui/table";
 import { clearSpanishValidationMessage, setSpanishValidationMessage } from "@/lib/form-validation";
 import type { MenuItem } from "@/types";
-import { Pencil, X } from "lucide-react";
-import { useActionState, useState } from "react";
+import { Pencil } from "lucide-react";
+import { useActionState, useState, useEffect } from "react";
 import { updateMenuItem, type MenuItemFormState } from "./actions";
+
+const CATEGORIES = ["Almuerzos", "Desayunos", "Bebidas", "Burritas", "Baleadas"];
 
 function EditableMenuRow({ item, canEdit }: { item: MenuItem; canEdit: boolean }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [editKey, setEditKey] = useState(0);
+  const [name, setName] = useState(item.name);
+  const [description, setDescription] = useState(item.description ?? "");
+  const [active, setActive] = useState<boolean>(item.active);
+  const [price, setPrice] = useState(String(Number(item.price)));
+  const [category, setCategory] = useState(item.category ?? "");
   const [state, formAction] = useActionState(updateMenuItem, null as MenuItemFormState);
+
+  // Este cierra el editor cuando se guarda
+  useEffect(() => {
+    if (state?.success) {
+      setEditKey(k => k + 1);
+      setIsEditing(false);
+    }
+  }, [state?.success]);
+
+  // Este sincroniza los valores cuando el item cambia desde el servidor
+  useEffect(() => {
+    setName(item.name);
+    setDescription(item.description ?? "");
+    setCategory(item.category ?? "");
+    setPrice(String(Number(item.price)));
+    setActive(item.active);
+  }, [item]);
+
+  function openEdit() {
+    setEditKey(k => k + 1);
+    setActive(item.active);
+    setPrice(String(Number(item.price)));
+    setName(item.name);
+    setDescription(item.description ?? "");
+    setCategory(item.category ?? "");
+    setIsEditing(true);
+  }
 
   return (
     <TableRow>
+      {/* PLATILLO */}
       <TableCell className="font-medium">
-        {isEditing && canEdit ? (
-          <form action={formAction} className="space-y-2">
-            <input type="hidden" name="id" value={item.id} />
-            <Input name="name" defaultValue={item.name} required onInvalid={setSpanishValidationMessage} onInput={clearSpanishValidationMessage} />
-            <Input name="category" defaultValue={item.category ?? ""} onInvalid={setSpanishValidationMessage} onInput={clearSpanishValidationMessage} />
-            <Input
-              name="price"
-              type="number"
-              min="0.01"
-              step="0.01"
-              defaultValue={Number(item.price)}
-              required
-              onInvalid={setSpanishValidationMessage}
-              onInput={clearSpanishValidationMessage}
-            />
-            <textarea
-              name="description"
-              defaultValue={item.description ?? ""}
-              rows={2}
-              onInvalid={setSpanishValidationMessage}
-              onInput={clearSpanishValidationMessage}
-              className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm outline-none transition focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            />
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="active" defaultChecked={item.active} className="size-4 rounded border-input" />
-              Activo
-            </label>
-            {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
-            {state?.success && <p className="text-sm font-medium text-brand-green">{state.success}</p>}
-            <div className="flex gap-2">
-              <Button type="submit" size="sm">Guardar</Button>
-              <Button type="button" size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
-                Cerrar
-              </Button>
+        {isEditing ? (
+          <div className="space-y-2 py-3" key={editKey}>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-muted-foreground w-20 shrink-0">Nombre</label>
+              <Input name="name" form={`edit-${item.id}`}
+                value={name} onChange={e => setName(e.target.value)}
+                required className="h-8 w-[32rem] text-sm"
+                onInvalid={setSpanishValidationMessage} onInput={clearSpanishValidationMessage}
+              />
             </div>
-          </form>
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-medium text-muted-foreground w-20 shrink-0">Descripción</label>
+              <Input name="description" form={`edit-${item.id}`}
+                value={description} onChange={e => setDescription(e.target.value)}
+                className="h-8 w-[32rem] text-sm"
+                onInvalid={setSpanishValidationMessage} onInput={clearSpanishValidationMessage}
+              />
+            </div>
+          </div>
         ) : (
           <div className="space-y-1">
             <p>{item.name}</p>
@@ -67,26 +86,100 @@ function EditableMenuRow({ item, canEdit }: { item: MenuItem; canEdit: boolean }
           </div>
         )}
       </TableCell>
-      <TableCell>{item.category ?? "-"}</TableCell>
-      <TableCell>L {Number(item.price).toFixed(2)}</TableCell>
+
+      {/* CATEGORÍA */}
       <TableCell>
-        <Badge variant={item.active ? "default" : "secondary"}>{item.active ? "Activo" : "Inactivo"}</Badge>
-      </TableCell>
-      <TableCell className="w-[110px]">
-        {canEdit ? (
-          !isEditing ? (
-            <Button type="button" size="sm" variant="outline" onClick={() => setIsEditing(true)}>
-              <Pencil />
-              Editar
-            </Button>
-          ) : (
-            <Button type="button" size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
-              <X />
-              Cerrar
-            </Button>
-          )
+        {isEditing ? (
+          <div className="flex justify-center" key={editKey}>
+            <select name="category" form={`edit-${item.id}`}
+              value={category} onChange={e => setCategory(e.target.value)}
+              className="h-8 w-full rounded-lg border border-input bg-transparent px-2 text-sm outline-none transition focus-visible:border-ring"
+            >
+              <option value="">— Selecciona una categoría —</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
         ) : (
+          item.category ?? "-"
+        )}
+      </TableCell>
+
+      {/* PRECIO */}
+      <TableCell>
+        {isEditing ? (
+          <div className="flex justify-center" key={editKey}>
+            <Input
+              name="price"
+              form={`edit-${item.id}`}
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={price}
+              onChange={e => setPrice(e.target.value)}
+              required
+              className="h-8 w-24 text-sm"
+              onInvalid={setSpanishValidationMessage}
+              onInput={clearSpanishValidationMessage}
+            />
+          </div>
+        ) : (
+          `L ${Number(item.price).toFixed(2)}`
+        )}
+      </TableCell>
+
+      {/* ESTADO */}
+      <TableCell>
+        {isEditing ? (
+          <div className="flex justify-center">
+            {/* Un solo hidden input que refleja el estado actual */}
+            <input type="hidden" name="active" value={active ? "true" : "false"} form={`edit-${item.id}`} />
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={active}
+                onChange={e => setActive(e.target.checked)}
+                className="size-4 rounded border-input cursor-pointer"
+              />
+              Activo
+            </label>
+          </div>
+        ) : (
+          <Badge variant={item.active ? "default" : "secondary"}>
+            {item.active ? "Activo" : "Inactivo"}
+          </Badge>
+        )}
+      </TableCell>
+
+      {/* ACCIÓN */}
+      <TableCell className="w-[160px]">
+        {!canEdit ? (
           <span className="text-sm text-muted-foreground">Solo lectura</span>
+        ) : isEditing ? (
+          <div className="flex flex-col items-center gap-2">
+            <form id={`edit-${item.id}`} action={formAction}>
+              <input type="hidden" name="id" defaultValue={item.id} />
+            </form>
+            {state?.error && <p className="text-xs text-destructive">{state.error}</p>}
+            {state?.success && <p className="text-xs font-medium text-brand-green">{state.success}</p>}
+            <div className="flex gap-1">
+              <Button type="submit" form={`edit-${item.id}`} size="sm"
+                className="bg-[#588f3d] hover:bg-[#4a7a33] text-white border-0">
+                Guardar
+              </Button>
+              <Button type="button" size="sm"
+                className="bg-[#CD6633] hover:bg-[#b85a2d] text-white border-0"
+                onClick={() => setIsEditing(false)}>
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button type="button" size="sm" variant="outline" onClick={openEdit}>
+            <Pencil />
+            Editar
+          </Button>
         )}
       </TableCell>
     </TableRow>
@@ -99,16 +192,23 @@ export function MenuTable({ items, canEdit = true }: { items: MenuItem[]; canEdi
   return (
     <div className="mt-4 overflow-x-auto rounded-md border">
       <Table>
+        <colgroup>
+          <col className="w-[40%]" />
+          <col className="w-[18%]" />
+          <col className="w-[14%]" />
+          <col className="w-[14%]" />
+          <col className="w-[14%]" />
+        </colgroup>
         <TableHeader>
-          <TableRow>
-            <TableHead>Platillo</TableHead>
-            <TableHead>Categoria</TableHead>
-            <TableHead>Precio</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead>Accion</TableHead>
+          <TableRow className="bg-[#753B19] hover:bg-[#753B19]">
+            <TableHead className="text-white font-bold uppercase tracking-wide text-center">Platillo</TableHead>
+            <TableHead className="text-white font-bold uppercase tracking-wide text-center">Categoría</TableHead>
+            <TableHead className="text-white font-bold uppercase tracking-wide text-center">Precio</TableHead>
+            <TableHead className="text-white font-bold uppercase tracking-wide text-center">Estado</TableHead>
+            <TableHead className="text-white font-bold uppercase tracking-wide text-center">Acción</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="bg-white">
           {items.map((item) => (
             <EditableMenuRow key={item.id} item={item} canEdit={canEdit} />
           ))}

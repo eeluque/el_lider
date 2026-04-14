@@ -11,11 +11,13 @@ export default async function AdminEmployeesPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Empleados</h1>
-      <p className="mt-1 text-muted-foreground">Usuarios admin y empleados. Crea nuevas cuentas de empleado abajo.</p>
-      <EmployeesTable users={(users ?? []) as { id: string; email: string; full_name: string | null; role: string; active: boolean; created_at: string }[]} />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Empleados</h1>
+        <p className="mt-1 text-muted-foreground">Usuarios admin y empleados. Crea nuevas cuentas de empleado abajo.</p>
+      </div>
       <CreateEmployeeForm />
+      <EmployeesTable users={(users ?? []) as { id: string; email: string; full_name: string | null; role: string; active: boolean; created_at: string }[]} />
     </div>
   );
 }

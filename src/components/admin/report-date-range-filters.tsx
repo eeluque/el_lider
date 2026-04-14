@@ -43,7 +43,6 @@ function PresetLinks({ variant }: { variant: "admin" | "kardex" }) {
   if (variant === "kardex") {
     return (
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="text-sm font-semibold text-[#1a1a1a]">Rápido:</span>
         <Link
           href={build(today.from, today.to)}
           className="rounded-full border border-[#d4c7b0] bg-white px-3 py-1.5 text-xs font-semibold text-[#6b5030] transition hover:border-[#e8a838]"
@@ -138,33 +137,61 @@ export function ReportDateRangeFilters({
   });
 
   return (
-    <div className={cn("space-y-3", className)}>
-      <PresetLinks variant={variant} />
+  <div className={cn("flex flex-col gap-3", className)}>
+    <form method="get" action={pathname} className={cn("flex flex-col gap-3", variant === "kardex" && "kardex-filter")}>
+      {hiddenEntries.map(([k, v]) => (
+        <input key={k} type="hidden" name={k} value={v} />
+      ))}
 
-      <form method="get" action={pathname} className={cn("flex flex-wrap items-end gap-3", variant === "kardex" && "kardex-filter")}>
-        {hiddenEntries.map(([key, value]) => (
-          <input key={key} type="hidden" name={key} value={value} />
-        ))}
-        <DateInputField label="Desde" name="from" value={from} variant={variant} />
-        <DateInputField label="Hasta" name="to" value={to} variant={variant} />
+      {/* Fila 1: Acceso rápido + fechas + botón */}
+      <div className="flex flex-wrap items-center gap-6">
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Acceso rápido:</span>
+          <PresetLinks variant={variant} />
+        </div>
+        <div className="flex flex-wrap items-end gap-3 ml-30">
+          <div>
+            <label style={{color: "rgb(155 114 89)"}} className="mb-1 block text-sm font-semibold uppercase tracking-wide">
+              Desde
+            </label>
+            <input type="date" name="from" defaultValue={from || undefined}
+              className={cn("rounded-lg border border-input bg-background px-2 py-2 text-sm", variant === "kardex" && "border-[#d4c7b0] bg-[#fffdf8]")}
+            />
+          </div>
+          <div>
+            <label style={{color: "rgb(155 114 89)"}} className="mb-1 block text-sm font-semibold uppercase tracking-wide">
+              Hasta
+            </label>
+            <input type="date" name="to" defaultValue={to || undefined}
+              className={cn("rounded-lg border border-input bg-background px-2 py-2 text-sm", variant === "kardex" && "border-[#d4c7b0] bg-[#fffdf8]")}
+            />
+          </div>
+          {/* Botón solo si NO es kardex */}
+          {variant !== "kardex" && (
+            <button type="submit" className={cn(buttonVariants({ variant: "secondary", size: "sm" }), "bg-[#CD6633] hover:bg-[#b85a2d] text-white border-0")}>
+              {submitLabel}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Fila 2: solo para kardex — Ingrediente + Filtrar */}
+      <div className="flex flex-wrap items-end gap-3">
         {children}
-        {variant === "kardex" ? (
-          <button type="submit" className="kardex-btn">
-            {submitLabel}
-          </button>
-        ) : (
-          <button type="submit" className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
+        {variant === "kardex" && (
+          <button type="submit" className="bg-[#CD6633] text-white border-0 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#b85a2d]">
             {submitLabel}
           </button>
         )}
-      </form>
-    </div>
-  );
+      </div>
+    </form>
+  </div>
+);
 }
 
 export function ReportDateRangeFiltersSuspense(props: Props) {
   return (
-    <Suspense fallback={<div className="h-20 animate-pulse rounded-lg bg-muted/40" aria-hidden />}>
+    <Suspense fallback={<div className="h-5 animate-pulse rounded-lg bg-muted/40" aria-hidden />}>
       <ReportDateRangeFilters {...props} />
     </Suspense>
   );

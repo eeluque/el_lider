@@ -1,11 +1,13 @@
 import { Suspense } from "react";
+
+import { getDeliveredOrdersInRange } from "@/services/reports";
+import { todayRange } from "@/lib/date-range";
 import { ReportBanner } from "@/components/admin/report-banner";
 import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
 import { ReportPagination } from "@/components/admin/report-pagination";
 import { defaultReportRange, formatCentralRangeLabel } from "@/lib/date-range";
 import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
-import { getDeliveredOrdersInRange } from "@/services/reports";
 
 type OrderRow = {
   id: string;
@@ -33,14 +35,31 @@ export default async function DeliveredOrdersDailyPage({
   searchParams: Promise<{ from?: string; to?: string; page?: string }>;
 }) {
   const params = await searchParams;
-  const range = defaultReportRange();
-  const from = params.from ?? range.from;
-  const to = params.to ?? range.to;
+  const today = todayRange();
+  const from = params.from ?? today.from;
+  const to = params.to ?? today.to;
   const page = parseReportPage(params.page);
 
-  const orders = (await getDeliveredOrdersInRange(from, to)) as OrderRow[];
+  const orders: OrderRow[] =
+  from && to ? ((await getDeliveredOrdersInRange(from, to)) as OrderRow[]) : [];
   const pagedOrders = paginateSlice(orders, page, REPORT_PAGE_SIZE);
-  const periodLabel = formatCentralRangeLabel(from, to);
+
+const isSameDay = from === to;
+
+const formatDate = (dateStr: string) =>
+  new Date(dateStr + "T12:00:00").toLocaleDateString("es-HN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+const periodLabel =
+  !from && !to
+    ? "Selecciona un rango de fechas"
+    : isSameDay
+      ? formatDate(from)
+      : `${formatDate(from)} – ${formatDate(to)}`;
+
   const totalImport = orders.reduce((sum, order) => sum + Number(order.total_price), 0);
 
   const exportRows = orders.map((order) => ({
@@ -53,13 +72,15 @@ export default async function DeliveredOrdersDailyPage({
 
   return (
     <div className="space-y-6">
-      <ReportBanner
-        title="Pedidos entregados"
-        subtitle={periodLabel}
-        right={<ReportExportButtons title="Pedidos entregados" rows={exportRows} from={from} to={to} />}
-      />
+      <div style={{ display: "flex", justifyContent: "flex-end", margin: "0 0 10px" }}>
+      <ReportExportButtons title="Pedidos entregados" rows={exportRows} from={from} to={to} />
+    </div>
+    <ReportBanner
+      title="Pedidos entregados"
+      subtitle={periodLabel}
+    />
 
-      <div className="rounded-xl border border-primary/10 bg-card p-4">
+      <div className="rounded-xl border border-primary/10 bg-card p-4 flex items-center justify-between gap-4 flex-wrap self-center">
         <ReportDateRangeFiltersSuspense from={from} to={to} submitLabel="Actualizar" />
       </div>
 

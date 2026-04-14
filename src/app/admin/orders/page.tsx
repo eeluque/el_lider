@@ -1,7 +1,6 @@
 import { formatCentralDate, todayRange } from "@/lib/date-range";
 import { getActiveMenuItems } from "@/services/menu";
 import { getOrdersWithItemsInRange } from "@/services/orders";
-import { CreateManualOrderForm } from "./create-manual-order-form";
 import { OrdersTodayClient } from "./orders-today-client";
 
 export default async function AdminOrdersPage({
@@ -26,7 +25,6 @@ export default async function AdminOrdersPage({
 
   return (
     <div className="space-y-6">
-      <CreateManualOrderForm menuItems={menuItems} />
       <OrdersTodayClient orders={orders} dateLabel={dateLabel} currentDate={currentDate} />
     </div>
   );

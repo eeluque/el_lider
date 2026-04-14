@@ -27,7 +27,7 @@ export function CreateMenuItemForm() {
       </CardHeader>
       <CardContent>
         <form action={formAction} className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2 md:col-span-2">
+          <div className="space-y-2">
             <Label htmlFor="menu-name">Nombre *</Label>
             <Input
               id="menu-name"
@@ -36,6 +36,7 @@ export function CreateMenuItemForm() {
               autoFocus
               minLength={NAME_MIN_LENGTH}
               maxLength={NAME_MAX_LENGTH}
+              placeholder="Baleada sencilla"
               onInvalid={setSpanishValidationMessage}
               onInput={validateSpanishOnInput}
             />
@@ -47,6 +48,7 @@ export function CreateMenuItemForm() {
               id="menu-category"
               name="category"
               maxLength={CATEGORY_MAX_LENGTH}
+              placeholder="Desayunos y/o almuerzos"
               onInvalid={setSpanishValidationMessage}
               onInput={validateSpanishOnInput}
             />
@@ -61,6 +63,7 @@ export function CreateMenuItemForm() {
               min="0.01"
               step="0.01"
               required
+              placeholder="L. 0.00"
               onInvalid={setSpanishValidationMessage}
               onInput={validateSpanishOnInput}
             />
