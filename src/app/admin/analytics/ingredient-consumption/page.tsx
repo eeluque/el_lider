@@ -1,9 +1,10 @@
+import { getIngredientConsumption } from "@/services/reports";
+import { defaultReportRange } from "@/lib/date-range";
+import { todayRange } from "@/lib/date-range";
 import { IngredientConsumptionPanels } from "@/components/reports/IngredientConsumptionPanels";
 import { ReportBanner } from "@/components/admin/report-banner";
 import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
-import { defaultReportRange } from "@/lib/date-range";
-import { getIngredientConsumption } from "@/services/reports";
 
 export default async function IngredientConsumptionPage({
   searchParams,
@@ -11,14 +12,25 @@ export default async function IngredientConsumptionPage({
   searchParams: Promise<{ from?: string; to?: string }>;
 }) {
   const params = await searchParams;
-  const range = defaultReportRange();
-  const to = params.to ?? range.to;
-  const from = params.from ?? range.from;
+  const today = todayRange();
+const from = params.from ?? today.from;
+const to = params.to ?? today.to;
   const consumption = await getIngredientConsumption({ from, to });
-  const monthLabel = `${new Date(`${from}T12:00:00`).toLocaleDateString("es-HN", {
+  const isSameDay = from === to;
+
+const formatDate = (dateStr: string) =>
+  new Date(dateStr + "T12:00:00").toLocaleDateString("es-HN", {
+    day: "numeric",
     month: "long",
     year: "numeric",
-  })} (${from} – ${to})`;
+  });
+
+const monthLabel =
+  !from && !to
+    ? "Selecciona un rango de fechas"
+    : isSameDay
+      ? formatDate(from)
+      : `${formatDate(from)} – ${formatDate(to)}`;
 
   const exportRows = consumption.map((item, index) => ({
     "#": index + 1,

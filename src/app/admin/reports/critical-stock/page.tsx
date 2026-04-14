@@ -46,7 +46,16 @@ export default async function CriticalStockPage({
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <ReportExportButtons
+          title="Lista de insumos"
+          rows={exportRows}
+          from={today}
+          to={today}
+          subtitlePrefix="Hoy"
+        />
+      </div>
       <ReportBanner
         title="Lista de insumos"
         subtitle={new Date().toLocaleDateString("es-HN", {
@@ -54,15 +63,6 @@ export default async function CriticalStockPage({
           month: "long",
           year: "numeric",
         })}
-        right={
-          <ReportExportButtons
-            title="Lista de insumos"
-            rows={exportRows}
-            from={today}
-            to={today}
-            subtitlePrefix="Hoy"
-          />
-        }
       />
 
       <div className="overflow-hidden rounded-xl border border-primary/15 bg-card shadow-sm">

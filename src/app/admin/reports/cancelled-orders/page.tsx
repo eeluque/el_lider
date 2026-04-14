@@ -1,15 +1,15 @@
 import Image from "next/image";
-import { Suspense } from "react";
-import { InsightCard } from "@/components/admin/insight-card";
-import { ReportBanner } from "@/components/admin/report-banner";
-import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
-import { ReportExportButtons } from "@/components/admin/report-export-buttons";
-import { ReportPagination } from "@/components/admin/report-pagination";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { defaultReportRange } from "@/lib/date-range";
-import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
 import { getCancelledOrders } from "@/services/reports";
+import { todayRange } from "@/lib/date-range";
+import { ReportBanner } from "@/components/admin/report-banner";
+import { ReportExportButtons } from "@/components/admin/report-export-buttons";
+import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { InsightCard } from "@/components/admin/insight-card";
+import { ReportPagination } from "@/components/admin/report-pagination";
+import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
+import { Suspense } from "react";
 
 function computeInsights(
   orders: {
@@ -54,9 +54,9 @@ export default async function CancelledOrdersPage({
   searchParams: Promise<{ from?: string; to?: string; page?: string }>;
 }) {
   const params = await searchParams;
-  const range = defaultReportRange();
-  const from = params.from ?? range.from;
-  const to = params.to ?? range.to;
+  const today = todayRange();
+  const from = params.from ?? today.from;
+  const to = params.to ?? today.to;
   const page = parseReportPage(params.page);
 
   const orders = (await getCancelledOrders({ from, to })) as {
@@ -70,16 +70,23 @@ export default async function CancelledOrdersPage({
   }[];
 
   const insights = computeInsights(orders);
+  const isSameDay = from === to;
+
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr + "T12:00:00").toLocaleDateString("es-HN", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+  const periodLabel =
+    !from && !to
+    ? "Selecciona un rango de fechas"
+    : isSameDay
+      ? formatDate(from)
+      : `${formatDate(from)} – ${formatDate(to)}`;
+
   const pagedOrders = paginateSlice(orders, page, REPORT_PAGE_SIZE);
-  const periodLabel = `${new Date(`${from}T12:00:00`).toLocaleDateString("es-HN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })} – ${new Date(`${to}T12:00:00`).toLocaleDateString("es-HN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })}`;
 
   const exportRows = orders.map((order) => ({
     Pedido: order.order_number,
@@ -94,11 +101,13 @@ export default async function CancelledOrdersPage({
   const dishIcon = <Image src="/icons/dish.png" alt="" width={28} height={28} />;
 
   return (
-    <div className="space-y-6 print:space-y-4">
+    <div className="space-y-3 print:space-y-4">
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <ReportExportButtons title="Pedidos cancelados" rows={exportRows} from={from} to={to} />
+      </div>
       <ReportBanner
         title="Pedidos cancelados"
         subtitle={periodLabel}
-        right={<ReportExportButtons title="Pedidos cancelados" rows={exportRows} from={from} to={to} />}
       />
 
       <div className="grid gap-4 md:grid-cols-2">

@@ -7,6 +7,7 @@ import { defaultReportRange } from "@/lib/date-range";
 import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
 import { getIngredients } from "@/services/inventory";
 import { getInventoryKardex } from "@/services/reports";
+import { toLocalDateString } from "@/lib/date-range";
 
 function formatDate(iso: string) {
   const date = new Date(iso);
@@ -114,10 +115,11 @@ export default async function InventoryKardexPage({
   const periodLabel = (() => {
     const start = new Date(`${from}T12:00:00`);
     const end = new Date(`${to}T12:00:00`);
-    return `${start.toLocaleDateString("es-HN", { day: "2-digit", month: "short", year: "numeric" })} – ${end.toLocaleDateString(
-      "es-HN",
-      { day: "2-digit", month: "short", year: "numeric" }
-    )}`;
+    const startStr = start.toLocaleDateString("es-HN", { day: "2-digit", month: "short", year: "numeric" });
+    const endStr = end.toLocaleDateString("es-HN", { day: "2-digit", month: "short", year: "numeric" });
+  
+    // Si son el mismo día, muestra solo una fecha
+    return startStr === endStr ? startStr : `${startStr} – ${endStr}`;
   })();
 
   return (
@@ -158,7 +160,7 @@ export default async function InventoryKardexPage({
         .kardex-unit-badge {
           background: #d9d9d94d;
           color: #d9d9d9;
-          font-size: 11px;
+          font-size: 15px;
           font-weight: 400;
           padding: 2px 10px;
           border-radius: 99px;
@@ -260,7 +262,7 @@ export default async function InventoryKardexPage({
 
         <div className="kardex-header" style={{ marginTop: 24 }}>
           <h1 style={{ color: "#633b22", fontWeight: 700, fontSize: 22, margin: 0, fontFamily: "'Outfit', serif" }}>
-            Kardex de movimientos de insumos
+            Kardex de Movimientos de Insumos
           </h1>
           <p style={{ color: "#6f6868", fontSize: 13, margin: "6px 0 0", fontWeight: 400 }}>Período: {periodLabel}</p>
         </div>
@@ -275,10 +277,10 @@ export default async function InventoryKardexPage({
             submitLabel="Filtrar"
             className="kardex-filter"
           >
-            <label htmlFor="k-ing" style={{ marginLeft: 12 }}>
+            <label htmlFor="k-ing" style={{ marginLeft: 2, marginTop: 10, color: "rgb(155 114 89)"}} className="uppercase tracking-wide text-sm font-semibold self-center">
               Ingrediente:
             </label>
-            <select id="k-ing" name="ingredientId" defaultValue={params.ingredientId ?? ""}>
+            <select id="k-ing" name="ingredientId" defaultValue={params.ingredientId ?? ""} style={{marginTop: 10}}>
               <option value="">Todos</option>
               {(ingredients as { id: string; name: string }[]).map((ingredient) => (
                 <option key={ingredient.id} value={ingredient.id}>
@@ -342,7 +344,9 @@ export default async function InventoryKardexPage({
                       colSpan={!params.ingredientId ? 8 : isSingleIngredient ? 8 : 7}
                       style={{ textAlign: "center", color: "#999", padding: "32px 0" }}
                     >
-                      Sin movimientos en este período.
+                      {from === to && from === toLocalDateString(new Date())
+                        ? "Aún no hay movimientos registrados hoy."
+                        : "Sin movimientos en este período."}
                     </td>
                   </tr>
                 )}

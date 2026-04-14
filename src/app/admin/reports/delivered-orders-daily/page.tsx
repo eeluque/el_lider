@@ -1,6 +1,8 @@
 import { Suspense } from "react";
-import { defaultReportRange } from "@/lib/date-range";
+
 import { getDeliveredOrdersInRange } from "@/services/reports";
+
+import { todayRange } from "@/lib/date-range";
 import { ReportBanner } from "@/components/admin/report-banner";
 import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
@@ -33,23 +35,30 @@ export default async function DeliveredOrdersDailyPage({
   searchParams: Promise<{ from?: string; to?: string; page?: string }>;
 }) {
   const params = await searchParams;
-  const dr = defaultReportRange();
-  const from = params.from ?? dr.from;
-  const to = params.to ?? dr.to;
+  const today = todayRange();
+  const from = params.from ?? today.from;
+  const to = params.to ?? today.to;
   const page = parseReportPage(params.page);
 
-  const orders = (await getDeliveredOrdersInRange(from, to)) as OrderRow[];
+  const orders: OrderRow[] =
+  from && to ? ((await getDeliveredOrdersInRange(from, to)) as OrderRow[]) : [];
   const pagedOrders = paginateSlice(orders, page, REPORT_PAGE_SIZE);
 
-  const periodLabel = `${new Date(from + "T12:00:00").toLocaleDateString("es-HN", {
+const isSameDay = from === to;
+
+const formatDate = (dateStr: string) =>
+  new Date(dateStr + "T12:00:00").toLocaleDateString("es-HN", {
     day: "numeric",
     month: "long",
     year: "numeric",
-  })} – ${new Date(to + "T12:00:00").toLocaleDateString("es-HN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })}`;
+  });
+
+const periodLabel =
+  !from && !to
+    ? "Selecciona un rango de fechas"
+    : isSameDay
+      ? formatDate(from)
+      : `${formatDate(from)} – ${formatDate(to)}`;
 
   const totalImport = orders.reduce((sum, order) => sum + Number(order.total_price), 0);
 
@@ -63,13 +72,15 @@ export default async function DeliveredOrdersDailyPage({
 
   return (
     <div className="space-y-6">
-      <ReportBanner
-        title="Pedidos entregados"
-        subtitle={periodLabel}
-        right={<ReportExportButtons title="Pedidos entregados" rows={exportRows} from={from} to={to} />}
-      />
+      <div style={{ display: "flex", justifyContent: "flex-end", margin: "0 0 10px" }}>
+      <ReportExportButtons title="Pedidos entregados" rows={exportRows} from={from} to={to} />
+    </div>
+    <ReportBanner
+      title="Pedidos entregados"
+      subtitle={periodLabel}
+    />
 
-      <div className="rounded-xl border border-primary/10 bg-card p-4">
+      <div className="rounded-xl border border-primary/10 bg-card p-4 flex items-center justify-between gap-4 flex-wrap self-center">
         <ReportDateRangeFiltersSuspense from={from} to={to} submitLabel="Actualizar" />
       </div>
 

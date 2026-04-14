@@ -1,5 +1,6 @@
 import { getTopDishes } from "@/services/reports";
 import { defaultReportRange } from "@/lib/date-range";
+import { todayRange } from "@/lib/date-range";
 import { ReportBanner } from "@/components/admin/report-banner";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
 import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
@@ -14,17 +15,28 @@ export default async function TopDishesPage({
   searchParams: Promise<{ from?: string; to?: string; page?: string }>;
 }) {
   const params = await searchParams;
-  const dr = defaultReportRange();
-  const to = params.to ?? dr.to;
-  const from = params.from ?? dr.from;
+  const today = todayRange();
+  const from = params.from ?? today.from;
+  const to = params.to ?? today.to;
   const page = parseReportPage(params.page);
   const dishes = await getTopDishes({ from, to });
   const pagedDishes = paginateSlice(dishes, page, REPORT_PAGE_SIZE);
 
-  const monthLabel = `${new Date(from + "T12:00:00").toLocaleDateString("es-HN", {
+  const isSameDay = from === to;
+
+const formatDate = (dateStr: string) =>
+  new Date(dateStr + "T12:00:00").toLocaleDateString("es-HN", {
+    day: "numeric",
     month: "long",
     year: "numeric",
-  })} (${from} – ${to})`;
+  });
+
+const monthLabel =
+  !from && !to
+    ? "Selecciona un rango de fechas"
+    : isSameDay
+      ? formatDate(from)
+      : `${formatDate(from)} – ${formatDate(to)}`;
 
   const exportRows = dishes.map((d, i) => ({
     "#": i + 1,
@@ -48,7 +60,11 @@ export default async function TopDishesPage({
       </div>
 
       {dishes.length === 0 ? (
-        <p className="text-center text-muted-foreground">No hay ventas en el periodo seleccionado.</p>
+        <p className="px-5 py-12 text-center text-muted-foreground">
+          {isSameDay
+            ? "Aún no hay pedidos entregados hoy."
+            : "No hay pedidos entregados en este periodo."}
+        </p>
       ) : (
         <>
           <TopDishesReport dishes={dishes} />
