@@ -7,7 +7,7 @@ import { ReportExportButtons } from "@/components/admin/report-export-buttons";
 import { ReportPagination } from "@/components/admin/report-pagination";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { defaultReportRange } from "@/lib/date-range";
+import { defaultReportRange, formatCentralDateTime, formatCentralRangeLabel } from "@/lib/date-range";
 import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
 import { getCancelledOrders } from "@/services/reports";
 
@@ -71,19 +71,11 @@ export default async function CancelledOrdersPage({
 
   const insights = computeInsights(orders);
   const pagedOrders = paginateSlice(orders, page, REPORT_PAGE_SIZE);
-  const periodLabel = `${new Date(`${from}T12:00:00`).toLocaleDateString("es-HN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })} – ${new Date(`${to}T12:00:00`).toLocaleDateString("es-HN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })}`;
+  const periodLabel = formatCentralRangeLabel(from, to);
 
   const exportRows = orders.map((order) => ({
     Pedido: order.order_number,
-    Fecha: new Date(order.created_at).toLocaleString("es-HN"),
+    Fecha: formatCentralDateTime(order.created_at),
     Cliente: order.customer_name,
     Platillos: order.order_items?.map((item) => item.menu_item?.name).filter(Boolean).join(", ") ?? "—",
     Motivo: order.cancellation_reason ?? "—",
@@ -151,7 +143,7 @@ export default async function CancelledOrdersPage({
               {pagedOrders.map((order) => (
                 <tr key={order.id} className="border-b border-border/60 last:border-0 odd:bg-muted/30">
                   <td className="p-3 font-mono text-xs">{order.order_number}</td>
-                  <td className="whitespace-nowrap p-3 text-muted-foreground">{new Date(order.created_at).toLocaleString("es-HN")}</td>
+                  <td className="whitespace-nowrap p-3 text-muted-foreground">{formatCentralDateTime(order.created_at)}</td>
                   <td className="p-3">{order.customer_name}</td>
                   <td className="max-w-[200px] p-3 text-xs text-muted-foreground">
                     {order.order_items?.map((item) => item.menu_item?.name).filter(Boolean).join(", ") || "—"}

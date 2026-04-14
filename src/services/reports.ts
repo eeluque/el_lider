@@ -1,18 +1,18 @@
 import { getSupabaseAdmin } from "@/lib/db";
-import { toLocalDateString } from "@/lib/date-range";
+import { endOfDayIso, startOfDayIso, toLocalDateString } from "@/lib/date-range";
 import { MENU_ITEM_CONSUMPTION_RECIPES, normalizeMenuItemName } from "@/lib/ingredient-consumption-recipes";
 
 function toDayBounds(from: string, to: string) {
-  const f = from.length <= 10 ? `${from}T00:00:00` : from;
-  const t = to.length <= 10 ? `${to}T23:59:59` : to;
+  const f = from.length <= 10 ? startOfDayIso(from) : from;
+  const t = to.length <= 10 ? endOfDayIso(to) : to;
   return { fromIso: f, toIso: t };
 }
 
 /** Pedidos entregados en un rango de fechas (YYYY-MM-DD), inclusive. */
 export async function getDeliveredOrdersInRange(fromDate: string, toDate: string) {
   const supabase = getSupabaseAdmin();
-  const from = `${fromDate}T00:00:00`;
-  const to = `${toDate}T23:59:59`;
+  const from = startOfDayIso(fromDate);
+  const to = endOfDayIso(toDate);
   const { data } = await supabase
     .from("orders")
     .select("*, order_items(*, menu_item:menu_items(name))")
@@ -80,19 +80,32 @@ export async function getSalesSummary(params: { from: string; to: string }) {
   const { data } = await supabase
     .from("orders")
     .select("created_at, total_price, status")
-    .in("status", ["delivered", "ready"])
+    .in("status", ["delivered", "ready", "cancelled"])
     .gte("created_at", fromIso)
     .lte("created_at", toIso)
     .order("created_at");
   const rows = (data ?? []) as { created_at: string; total_price: number; status: string }[];
   const delivered = rows.filter((r) => r.status === "delivered" || r.status === "ready");
+  const cancelled = rows.filter((r) => r.status === "cancelled");
   const byPeriod: Record<string, number> = {};
+  const cancelledByPeriod: Record<string, number> = {};
   for (const r of delivered) {
     const d = new Date(r.created_at);
     const key = toLocalDateString(d);
     byPeriod[key] = (byPeriod[key] ?? 0) + Number(r.total_price);
   }
-  return { byPeriod, total: delivered.reduce((s, r) => s + Number(r.total_price), 0) };
+  for (const r of cancelled) {
+    const d = new Date(r.created_at);
+    const key = toLocalDateString(d);
+    cancelledByPeriod[key] = (cancelledByPeriod[key] ?? 0) + 1;
+  }
+  return {
+    byPeriod,
+    total: delivered.reduce((sum, row) => sum + Number(row.total_price), 0),
+    cancelledByPeriod,
+    cancelledCount: cancelled.length,
+    cancelledAmount: cancelled.reduce((sum, row) => sum + Number(row.total_price), 0),
+  };
 }
 
 /** Top dishes by quantity sold in a period */

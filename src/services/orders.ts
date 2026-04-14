@@ -1,9 +1,26 @@
 import { getSupabaseAdmin } from "@/lib/db";
 import type { Order, OrderStatus, OrderWithItems } from "@/types";
 
-export function generateOrderNumber(): string {
-  const n = Date.now().toString(36).toUpperCase().slice(-6);
-  return `ORD-${n}`;
+export function getNextSequentialOrderNumber(lastOrderNumber?: string | null): string {
+  const digits = (lastOrderNumber ?? "").match(/\d+/g)?.join("") ?? "";
+  const lastNumber = Number.parseInt(digits, 10);
+  const nextNumber = Number.isFinite(lastNumber) ? lastNumber + 1 : 1;
+  return nextNumber.toString().padStart(6, "0");
+}
+
+export async function generateOrderNumber(): Promise<string> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("orders")
+    .select("order_number")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  const latestOrderNumber =
+    ((data ?? []) as Array<{ order_number?: string | null }>)[0]?.order_number ?? null;
+
+  return getNextSequentialOrderNumber(latestOrderNumber);
 }
 
 export async function createOrder(params: {
@@ -15,7 +32,7 @@ export async function createOrder(params: {
 }): Promise<{ orderId: string; orderNumber: string }> {
   const supabase = getSupabaseAdmin();
   const totalPrice = params.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-  const orderNumber = generateOrderNumber();
+  const orderNumber = await generateOrderNumber();
 
   const { data: order, error: orderError } = await supabase
     .from("orders")

@@ -1,12 +1,12 @@
-import { getTopDishes } from "@/services/reports";
-import { defaultReportRange } from "@/lib/date-range";
-import { ReportBanner } from "@/components/admin/report-banner";
-import { ReportExportButtons } from "@/components/admin/report-export-buttons";
-import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
-import { TopDishesReport } from "@/components/reports/TopDishesReport";
-import { ReportPagination } from "@/components/admin/report-pagination";
-import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
 import { Suspense } from "react";
+import { ReportBanner } from "@/components/admin/report-banner";
+import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
+import { ReportExportButtons } from "@/components/admin/report-export-buttons";
+import { ReportPagination } from "@/components/admin/report-pagination";
+import { TopDishesReport } from "@/components/reports/TopDishesReport";
+import { defaultReportRange, formatCentralDate, formatCentralRangeLabel, parseCentralDate } from "@/lib/date-range";
+import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
+import { getTopDishes } from "@/services/reports";
 
 export default async function TopDishesPage({
   searchParams,
@@ -14,33 +14,33 @@ export default async function TopDishesPage({
   searchParams: Promise<{ from?: string; to?: string; page?: string }>;
 }) {
   const params = await searchParams;
-  const dr = defaultReportRange();
-  const to = params.to ?? dr.to;
-  const from = params.from ?? dr.from;
+  const range = defaultReportRange();
+  const to = params.to ?? range.to;
+  const from = params.from ?? range.from;
   const page = parseReportPage(params.page);
   const dishes = await getTopDishes({ from, to });
   const pagedDishes = paginateSlice(dishes, page, REPORT_PAGE_SIZE);
 
-  const monthLabel = `${new Date(from + "T12:00:00").toLocaleDateString("es-HN", {
+  const monthLabel = `${formatCentralDate(parseCentralDate(from), {
     month: "long",
     year: "numeric",
-  })} (${from} – ${to})`;
+  })} (${formatCentralRangeLabel(from, to)})`;
 
-  const exportRows = dishes.map((d, i) => ({
-    "#": i + 1,
-    Platillo: d.name,
-    Categoría: d.category,
-    Unidades: d.quantity,
-    "Ingreso (aprox.)": d.revenue.toFixed(2),
+  const exportRows = dishes.map((dish, index) => ({
+    "#": index + 1,
+    Platillo: dish.name,
+    Categoría: dish.category,
+    Unidades: dish.quantity,
+    "Ingreso (aprox.)": dish.revenue.toFixed(2),
   }));
 
   return (
     <div className="space-y-6">
       <div>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-          <ReportExportButtons title="Platillos más Vendidos" rows={exportRows} from={from} to={to} />
+          <ReportExportButtons title="Platillos más vendidos" rows={exportRows} from={from} to={to} />
         </div>
-        <ReportBanner title="Platillos más Vendidos" subtitle={monthLabel} />
+        <ReportBanner title="Platillos más vendidos" subtitle={monthLabel} />
       </div>
 
       <div className="rounded-xl border border-primary/10 bg-card p-4">
@@ -48,7 +48,7 @@ export default async function TopDishesPage({
       </div>
 
       {dishes.length === 0 ? (
-        <p className="text-center text-muted-foreground">No hay ventas en el periodo seleccionado.</p>
+        <p className="text-center text-muted-foreground">No hay ventas en el período seleccionado.</p>
       ) : (
         <>
           <TopDishesReport dishes={dishes} />
@@ -69,15 +69,15 @@ export default async function TopDishesPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {pagedDishes.map((d, idx) => {
-                    const rank = (page - 1) * REPORT_PAGE_SIZE + idx + 1;
+                  {pagedDishes.map((dish, index) => {
+                    const rank = (page - 1) * REPORT_PAGE_SIZE + index + 1;
                     return (
-                      <tr key={d.id} className="border-b border-border/60 last:border-0 odd:bg-muted/30">
+                      <tr key={dish.id} className="border-b border-border/60 last:border-0 odd:bg-muted/30">
                         <td className="p-3 tabular-nums text-muted-foreground">{rank}</td>
-                        <td className="p-3 font-medium">{d.name}</td>
-                        <td className="p-3 text-muted-foreground">{d.category}</td>
-                        <td className="p-3 text-right tabular-nums">{d.quantity}</td>
-                        <td className="p-3 text-right tabular-nums column-money-amount">L. {d.revenue.toFixed(2)}</td>
+                        <td className="p-3 font-medium">{dish.name}</td>
+                        <td className="p-3 text-muted-foreground">{dish.category}</td>
+                        <td className="p-3 text-right tabular-nums">{dish.quantity}</td>
+                        <td className="p-3 text-right tabular-nums column-money-amount">L. {dish.revenue.toFixed(2)}</td>
                       </tr>
                     );
                   })}

@@ -1,8 +1,8 @@
-import { IngredientConsumptionPanels } from "@/components/reports/IngredientConsumptionPanels";
 import { ReportBanner } from "@/components/admin/report-banner";
 import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
-import { defaultReportRange } from "@/lib/date-range";
+import { IngredientConsumptionPanels } from "@/components/reports/IngredientConsumptionPanels";
+import { defaultReportRange, formatCentralDate, formatCentralRangeLabel, parseCentralDate } from "@/lib/date-range";
 import { getIngredientConsumption } from "@/services/reports";
 
 export default async function IngredientConsumptionPage({
@@ -15,10 +15,10 @@ export default async function IngredientConsumptionPage({
   const to = params.to ?? range.to;
   const from = params.from ?? range.from;
   const consumption = await getIngredientConsumption({ from, to });
-  const monthLabel = `${new Date(`${from}T12:00:00`).toLocaleDateString("es-HN", {
+  const monthLabel = `${formatCentralDate(parseCentralDate(from), {
     month: "long",
     year: "numeric",
-  })} (${from} – ${to})`;
+  })} (${formatCentralRangeLabel(from, to)})`;
 
   const exportRows = consumption.map((item, index) => ({
     "#": index + 1,

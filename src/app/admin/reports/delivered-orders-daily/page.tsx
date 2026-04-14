@@ -1,11 +1,11 @@
 import { Suspense } from "react";
-import { defaultReportRange } from "@/lib/date-range";
-import { getDeliveredOrdersInRange } from "@/services/reports";
 import { ReportBanner } from "@/components/admin/report-banner";
 import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
 import { ReportPagination } from "@/components/admin/report-pagination";
+import { defaultReportRange, formatCentralRangeLabel } from "@/lib/date-range";
 import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
+import { getDeliveredOrdersInRange } from "@/services/reports";
 
 type OrderRow = {
   id: string;
@@ -33,24 +33,14 @@ export default async function DeliveredOrdersDailyPage({
   searchParams: Promise<{ from?: string; to?: string; page?: string }>;
 }) {
   const params = await searchParams;
-  const dr = defaultReportRange();
-  const from = params.from ?? dr.from;
-  const to = params.to ?? dr.to;
+  const range = defaultReportRange();
+  const from = params.from ?? range.from;
+  const to = params.to ?? range.to;
   const page = parseReportPage(params.page);
 
   const orders = (await getDeliveredOrdersInRange(from, to)) as OrderRow[];
   const pagedOrders = paginateSlice(orders, page, REPORT_PAGE_SIZE);
-
-  const periodLabel = `${new Date(from + "T12:00:00").toLocaleDateString("es-HN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })} – ${new Date(to + "T12:00:00").toLocaleDateString("es-HN", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })}`;
-
+  const periodLabel = formatCentralRangeLabel(from, to);
   const totalImport = orders.reduce((sum, order) => sum + Number(order.total_price), 0);
 
   const exportRows = orders.map((order) => ({
@@ -77,13 +67,12 @@ export default async function DeliveredOrdersDailyPage({
         <div className="report-table-header flex flex-col gap-3 border-b border-primary/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="outfit font-serif text-lg font-semibold">Pedidos entregados</h2>
           <p className="report-table-header-total text-right text-base font-semibold tabular-nums">
-            Total:{" "}
-            <span>L. {totalImport.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            Total: <span>L. {totalImport.toLocaleString("es-HN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </p>
         </div>
 
         {orders.length === 0 ? (
-          <p className="px-5 py-12 text-center text-muted-foreground">No hay pedidos entregados en este periodo.</p>
+          <p className="px-5 py-12 text-center text-muted-foreground">No hay pedidos entregados en este período.</p>
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -97,8 +86,8 @@ export default async function DeliveredOrdersDailyPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {pagedOrders.map((order, idx) => (
-                    <tr key={order.id} className={`border-b border-border/50 ${idx % 2 === 1 ? "bg-muted/25" : "bg-card"}`}>
+                  {pagedOrders.map((order, index) => (
+                    <tr key={order.id} className={`border-b border-border/50 ${index % 2 === 1 ? "bg-muted/25" : "bg-card"}`}>
                       <td className="px-4 py-4 align-top font-mono text-sm font-bold text-[rgb(117,59,25)]">#{order.order_number}</td>
                       <td className="px-4 py-4 align-top font-semibold text-foreground">{order.customer_name}</td>
                       <td className="max-w-[280px] px-4 py-4 align-top text-muted-foreground">{formatProducts(order.order_items)}</td>

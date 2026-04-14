@@ -1,10 +1,11 @@
 import { Suspense } from "react";
-import { Button } from "@/components/ui/button";
-import { getIngredients } from "@/services/inventory";
 import { ReportBanner } from "@/components/admin/report-banner";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
 import { ReportPagination } from "@/components/admin/report-pagination";
+import { Button } from "@/components/ui/button";
+import { formatCentralDate, todayRange } from "@/lib/date-range";
 import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
+import { getIngredients } from "@/services/inventory";
 
 export default async function CriticalStockPage({
   searchParams,
@@ -16,16 +17,16 @@ export default async function CriticalStockPage({
 
   const ingredients = await getIngredients(true);
   const sorted = [...ingredients].sort((a, b) => {
-    const aCurr = Number(a.current_stock);
-    const aMin = Number(a.minimum_stock);
-    const bCurr = Number(b.current_stock);
-    const bMin = Number(b.minimum_stock);
-    const aLow = aCurr <= aMin;
-    const bLow = bCurr <= bMin;
+    const aCurrent = Number(a.current_stock);
+    const aMinimum = Number(a.minimum_stock);
+    const bCurrent = Number(b.current_stock);
+    const bMinimum = Number(b.minimum_stock);
+    const aLow = aCurrent <= aMinimum;
+    const bLow = bCurrent <= bMinimum;
 
     if (aLow && !bLow) return -1;
     if (!aLow && bLow) return 1;
-    return aCurr - bCurr;
+    return aCurrent - bCurrent;
   });
 
   const paged = paginateSlice(sorted, page, REPORT_PAGE_SIZE);
@@ -39,17 +40,17 @@ export default async function CriticalStockPage({
       Unidad: ingredient.unit,
       "Stock actual": current,
       "Stock mínimo": minimum,
-      Estado: low ? "Bajo – reponer" : "OK",
+      Estado: low ? "Bajo - reponer" : "OK",
     };
   });
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayRange().from;
 
   return (
     <div className="space-y-6">
       <ReportBanner
         title="Lista de insumos"
-        subtitle={new Date().toLocaleDateString("es-HN", {
+        subtitle={formatCentralDate(new Date(), {
           day: "numeric",
           month: "long",
           year: "numeric",
@@ -68,9 +69,7 @@ export default async function CriticalStockPage({
       <div className="overflow-hidden rounded-xl border border-primary/15 bg-card shadow-sm">
         <div className="border-b border-primary/10 bg-card px-5 py-4">
           <h2 className="font-serif text-lg font-semibold text-foreground">Stock crítico</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Insumos con existencias iguales o por debajo del mínimo definido.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Insumos con existencias iguales o por debajo del mínimo definido.</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -84,7 +83,7 @@ export default async function CriticalStockPage({
               </tr>
             </thead>
             <tbody>
-              {paged.map((ingredient, idx) => {
+              {paged.map((ingredient, index) => {
                 const current = Number(ingredient.current_stock);
                 const minimum = Number(ingredient.minimum_stock);
                 const low = current <= minimum;
@@ -93,7 +92,7 @@ export default async function CriticalStockPage({
                   <tr
                     key={ingredient.id}
                     className={`border-b border-border/60 last:border-0 ${
-                      low ? "bg-red-50/50 dark:bg-red-950/20" : idx % 2 === 1 ? "bg-muted/40" : "bg-card"
+                      low ? "bg-red-50/50 dark:bg-red-950/20" : index % 2 === 1 ? "bg-muted/40" : "bg-card"
                     }`}
                   >
                     <td className={`p-3 font-medium ${low ? "text-destructive" : "text-foreground"}`}>{ingredient.name}</td>
