@@ -1,15 +1,17 @@
 import Image from "next/image";
+import { Suspense } from "react";
+import { InsightCard } from "@/components/admin/insight-card";
+import { ReportBanner } from "@/components/admin/report-banner";
+import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
+import { ReportExportButtons } from "@/components/admin/report-export-buttons";
+import { ReportPagination } from "@/components/admin/report-pagination";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { defaultReportRange, formatCentralDateTime, formatCentralRangeLabel } from "@/lib/date-range";
+import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
 import { getCancelledOrders } from "@/services/reports";
 import { todayRange } from "@/lib/date-range";
-import { ReportBanner } from "@/components/admin/report-banner";
-import { ReportExportButtons } from "@/components/admin/report-export-buttons";
-import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { InsightCard } from "@/components/admin/insight-card";
-import { ReportPagination } from "@/components/admin/report-pagination";
-import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
-import { Suspense } from "react";
+
 
 function computeInsights(
   orders: {
@@ -79,18 +81,19 @@ export default async function CancelledOrdersPage({
       year: "numeric",
     });
 
-  const periodLabel =
+  /* const periodLabel =
     !from && !to
     ? "Selecciona un rango de fechas"
     : isSameDay
       ? formatDate(from)
-      : `${formatDate(from)} – ${formatDate(to)}`;
+      : `${formatDate(from)} – ${formatDate(to)}`; */
 
   const pagedOrders = paginateSlice(orders, page, REPORT_PAGE_SIZE);
+  const periodLabel = formatCentralRangeLabel(from, to);
 
   const exportRows = orders.map((order) => ({
     Pedido: order.order_number,
-    Fecha: new Date(order.created_at).toLocaleString("es-HN"),
+    Fecha: formatCentralDateTime(order.created_at),
     Cliente: order.customer_name,
     Platillos: order.order_items?.map((item) => item.menu_item?.name).filter(Boolean).join(", ") ?? "—",
     Motivo: order.cancellation_reason ?? "—",
@@ -160,7 +163,7 @@ export default async function CancelledOrdersPage({
               {pagedOrders.map((order) => (
                 <tr key={order.id} className="border-b border-border/60 last:border-0 odd:bg-muted/30">
                   <td className="p-3 font-mono text-xs">{order.order_number}</td>
-                  <td className="whitespace-nowrap p-3 text-muted-foreground">{new Date(order.created_at).toLocaleString("es-HN")}</td>
+                  <td className="whitespace-nowrap p-3 text-muted-foreground">{formatCentralDateTime(order.created_at)}</td>
                   <td className="p-3">{order.customer_name}</td>
                   <td className="max-w-[200px] p-3 text-xs text-muted-foreground">
                     {order.order_items?.map((item) => item.menu_item?.name).filter(Boolean).join(", ") || "—"}

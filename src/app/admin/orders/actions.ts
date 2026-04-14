@@ -24,6 +24,10 @@ export async function updateOrderStatus(
     throw new Error("No autorizado");
   }
   await updateStatus(orderId, status, cancellationReason);
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/analytics/sales-summary");
+  revalidatePath("/admin/reports/delivered-orders-daily");
+  revalidatePath("/admin/reports/cancelled-orders");
 }
 
 export type ManualOrderFormState = { error?: string; success?: string } | null;

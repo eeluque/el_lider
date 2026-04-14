@@ -38,21 +38,21 @@ const monthLabel =
       ? formatDate(from)
       : `${formatDate(from)} – ${formatDate(to)}`;
 
-  const exportRows = dishes.map((d, i) => ({
-    "#": i + 1,
-    Platillo: d.name,
-    Categoría: d.category,
-    Unidades: d.quantity,
-    "Ingreso (aprox.)": d.revenue.toFixed(2),
+  const exportRows = dishes.map((dish, index) => ({
+    "#": index + 1,
+    Platillo: dish.name,
+    Categoría: dish.category,
+    Unidades: dish.quantity,
+    "Ingreso (aprox.)": dish.revenue.toFixed(2),
   }));
 
   return (
     <div className="space-y-6">
       <div>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-          <ReportExportButtons title="Platillos más Vendidos" rows={exportRows} from={from} to={to} />
+          <ReportExportButtons title="Platillos más vendidos" rows={exportRows} from={from} to={to} />
         </div>
-        <ReportBanner title="Platillos más Vendidos" subtitle={monthLabel} />
+        <ReportBanner title="Platillos más vendidos" subtitle={monthLabel} />
       </div>
 
       <div className="rounded-xl border border-primary/10 bg-card p-4">
@@ -85,15 +85,15 @@ const monthLabel =
                   </tr>
                 </thead>
                 <tbody>
-                  {pagedDishes.map((d, idx) => {
-                    const rank = (page - 1) * REPORT_PAGE_SIZE + idx + 1;
+                  {pagedDishes.map((dish, index) => {
+                    const rank = (page - 1) * REPORT_PAGE_SIZE + index + 1;
                     return (
-                      <tr key={d.id} className="border-b border-border/60 last:border-0 odd:bg-muted/30">
+                      <tr key={dish.id} className="border-b border-border/60 last:border-0 odd:bg-muted/30">
                         <td className="p-3 tabular-nums text-muted-foreground">{rank}</td>
-                        <td className="p-3 font-medium">{d.name}</td>
-                        <td className="p-3 text-muted-foreground">{d.category}</td>
-                        <td className="p-3 text-right tabular-nums">{d.quantity}</td>
-                        <td className="p-3 text-right tabular-nums column-money-amount">L. {d.revenue.toFixed(2)}</td>
+                        <td className="p-3 font-medium">{dish.name}</td>
+                        <td className="p-3 text-muted-foreground">{dish.category}</td>
+                        <td className="p-3 text-right tabular-nums">{dish.quantity}</td>
+                        <td className="p-3 text-right tabular-nums column-money-amount">L. {dish.revenue.toFixed(2)}</td>
                       </tr>
                     );
                   })}

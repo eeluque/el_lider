@@ -3,16 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { getSupabaseAdmin } from "@/lib/db";
+import { CUSTOMER_CANCELLATION_REASONS } from "@/lib/orders";
 
 export type CancelOrderState = { error?: string; success?: string } | null;
 
-const ALLOWED_REASONS = new Set([
-  "Cambio de planes",
-  "Elegí otro platillo",
-  "Error al realizar el pedido",
-  "El tiempo de espera es muy largo",
-  "Otro",
-]);
+const ALLOWED_REASONS = new Set(CUSTOMER_CANCELLATION_REASONS);
 
 export async function cancelOwnOrder(
   _prev: CancelOrderState,
@@ -25,19 +20,13 @@ export async function cancelOwnOrder(
 
   const orderId = String(formData.get("orderId") ?? "").trim();
   const reason = String(formData.get("reason") ?? "").trim();
-  const customReason = String(formData.get("customReason") ?? "").trim();
 
   if (!orderId) {
     return { error: "Pedido inválido." };
   }
 
-  if (!reason || !ALLOWED_REASONS.has(reason)) {
-    return { error: "Selecciona un motivo de cancelación." };
-  }
-
-  const finalReason = reason === "Otro" ? customReason : reason;
-  if (!finalReason) {
-    return { error: "Describe el motivo de cancelación." };
+  if (!reason || !ALLOWED_REASONS.has(reason as (typeof CUSTOMER_CANCELLATION_REASONS)[number])) {
+    return { error: "Selecciona un motivo de cancelación válido." };
   }
 
   const supabase = getSupabaseAdmin();
@@ -68,7 +57,7 @@ export async function cancelOwnOrder(
 
   const { error } = await supabase
     .from("orders")
-    .update({ status: "cancelled", cancellation_reason: finalReason })
+    .update({ status: "cancelled", cancellation_reason: reason })
     .eq("id", orderId);
 
   if (error) {
@@ -78,7 +67,8 @@ export async function cancelOwnOrder(
 
   revalidatePath("/account/orders");
   revalidatePath("/admin/orders");
-  revalidatePath("/admin/orders");
+  revalidatePath("/admin/analytics/sales-summary");
+  revalidatePath("/admin/reports/cancelled-orders");
 
   return { success: "Pedido cancelado correctamente." };
 }

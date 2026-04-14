@@ -19,8 +19,11 @@ export default async function SalesSummaryPage({
   const from = params.from ?? today.from;
   const to = params.to ?? today.to;
   const page = parseReportPage(params.page);
-  const { byPeriod, total } = await getSalesSummary({ from, to });
-  const chartData = fillDailySalesSeries(from, to, byPeriod);
+  const { byPeriod, total, cancelledByPeriod, cancelledCount, cancelledAmount } = await getSalesSummary({ from, to });
+  const chartData = fillDailySalesSeries(from, to, byPeriod).map((row) => ({
+    ...row,
+    cancelados: cancelledByPeriod[row.dateKey] ?? 0,
+  }));
   const tableRows = paginateSlice(chartData, page, REPORT_PAGE_SIZE);
 
   const isSameDay = from === to;
@@ -44,17 +47,23 @@ const monthLabel =
       Fecha: row.dateKey,
       Día: row.name,
       "Ventas (L.)": row.ventas.toFixed(2),
+      Cancelados: row.cancelados,
     })),
-    { Fecha: "TOTAL", Día: "", "Ventas (L.)": total.toFixed(2) },
+    {
+      Fecha: "TOTAL",
+      Día: "",
+      "Ventas (L.)": total.toFixed(2),
+      Cancelados: cancelledCount,
+    },
   ];
 
   return (
     <div className="space-y-6">
       <div>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
-          <ReportExportButtons title="Resumen de Ventas" rows={exportRows} from={from} to={to} />
+          <ReportExportButtons title="Resumen de ventas" rows={exportRows} from={from} to={to} />
         </div>
-        <ReportBanner title="Resumen de Ventas" subtitle={monthLabel} />
+        <ReportBanner title="Resumen de ventas" subtitle={monthLabel} />
       </div>
 
       <div className="rounded-xl border border-primary/10 bg-card p-4">
@@ -65,6 +74,8 @@ const monthLabel =
         chartData={chartData}
         tableRows={tableRows}
         total={total}
+        cancelledCount={cancelledCount}
+        cancelledAmount={cancelledAmount}
         monthLabel={monthLabel}
         pagination={
           <Suspense fallback={null}>
