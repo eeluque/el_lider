@@ -13,7 +13,8 @@
     "seed:report-fixtures": "tsx scripts/seed-report-fixtures.ts",
     "seed:pagination": "tsx scripts/seed-pagination-test-data.ts",
     "seed": "tsx scripts/seed.ts",
-    "upsert-admin": "tsx scripts/upsert-admin-user.ts"
+    "upsert-admin": "tsx scripts/upsert-admin-user.ts",
+    "test:unitaria": "vitest run scripts/unitaria.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
