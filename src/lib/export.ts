@@ -29,6 +29,7 @@ export function formatReportPeriodSubtitle(from: string, to: string, subtitlePre
   return from.slice(0, 10) === to.slice(0, 10) ? `${prefix}${a}` : `${prefix}${a} – ${b}`;
 }
 
+// <--- MODIFICADO: Agregamos nuevas propiedades opcionales para personalizar alineaciones
 export type ExportFileOptions = {
   fileBaseName?: string;
   from?: string;
@@ -36,6 +37,8 @@ export type ExportFileOptions = {
   ingredientLabel?: string;
   ingredientUnit?: string;
   subtitlePrefix?: string;
+  columnAlignments?: Record<string, "left" | "center" | "right">; // <--- NUEVO: alineación por nombre de columna
+  customColumnStyles?: Record<number, { halign: string }>; // <--- NUEVO: alineación por índice (más preciso)
 };
 
 async function getImageBase64(src: string): Promise<string> {
@@ -46,6 +49,29 @@ async function getImageBase64(src: string): Promise<string> {
     reader.onloadend = () => resolve(reader.result as string);
     reader.readAsDataURL(blob);
   });
+}
+
+// <--- NUEVO: Función global que detecta automáticamente columnas numéricas/monetarias
+function getDefaultNumberColumnAlignment(headers: string[]): Record<number, { halign: string }> {
+  const alignments: Record<number, { halign: string }> = {};
+  
+  // Palabras clave que indican que la columna debe ir alineada a la derecha
+  const rightAlignKeywords = [
+    "importe", "total", "precio", "costo", "monto", "subtotal", "iva", "impuesto",
+    "cantidad", "stock", "entrada", "salida", "existencias", "price", "amount",
+    "total_price", "subtotal", "tax", "fee", "balance", "deuda", "pago", "venta"
+  ];
+  
+  headers.forEach((header, idx) => {
+    const lowerHeader = header.toLowerCase();
+    const shouldBeRight = rightAlignKeywords.some(keyword => lowerHeader.includes(keyword));
+    
+    if (shouldBeRight) {
+      alignments[idx] = { halign: "right" };
+    }
+  });
+  
+  return alignments;
 }
 
 export async function exportToPDF(title: string, rows: ExportRow[], options?: ExportFileOptions): Promise<void> {
@@ -110,6 +136,40 @@ export async function exportToPDF(title: string, rows: ExportRow[], options?: Ex
 
     tableHead.push(headers.map((h) => h.toUpperCase()));
 
+    // <--- NUEVO: Construir columnStyles combinando reglas globales + fijas + personalizadas
+    // Paso 1: Reglas automáticas globales (detecta columnas numéricas)
+    let finalColumnStyles: Record<string, { halign: "left" | "center" | "right" }> = {};
+    const autoAlignments = getDefaultNumberColumnAlignment(headers);
+    Object.entries(autoAlignments).forEach(([idx, style]) => {
+      finalColumnStyles[idx] = style as { halign: "left" | "center" | "right" };
+    });
+    
+    // Paso 2: Reglas fijas para columnas específicas de inventario (si existen)
+    const entradaIdx = headers.indexOf("Entrada");
+    const salidaIdx = headers.indexOf("Salida");
+    const stockIdx = headers.indexOf("Stock");
+    
+    if (entradaIdx !== -1) finalColumnStyles[String(entradaIdx)] = { halign: "right" };
+    if (salidaIdx !== -1) finalColumnStyles[String(salidaIdx)] = { halign: "right" };
+    if (stockIdx !== -1) finalColumnStyles[String(stockIdx)] = { halign: "right" };
+    
+    // Paso 3: Si el reporte envía customColumnStyles por índice, se aplican (sobrescriben)
+    if (options?.customColumnStyles) {
+      Object.entries(options.customColumnStyles).forEach(([idx, style]) => {
+        finalColumnStyles[idx] = style as { halign: "left" | "center" | "right" };
+      });
+    }
+    
+    // Paso 4: Si el reporte envía columnAlignments por nombre de columna, convertir a índices y aplicar
+    if (options?.columnAlignments) {
+      Object.entries(options.columnAlignments).forEach(([colName, alignment]) => {
+        const idx = headers.indexOf(colName);
+        if (idx !== -1) {
+          finalColumnStyles[String(idx)] = { halign: alignment };
+        }
+      });
+    }
+
     autoTable(doc, {
       head: tableHead,
       body: rows.map((r) => headers.map((h) => r[h] ?? "")),
@@ -132,11 +192,7 @@ export async function exportToPDF(title: string, rows: ExportRow[], options?: Ex
       },
       tableLineColor: [232, 213, 176],
       tableLineWidth: 0.3,
-      columnStyles: {
-        [headers.indexOf("Entrada")]: { halign: "right" },
-        [headers.indexOf("Salida")]: { halign: "right" },
-        [headers.indexOf("Stock")]: { halign: "right" },
-      },
+      columnStyles: finalColumnStyles, // <--- MODIFICADO: usamos las reglas combinadas
       didParseCell: (data) => {
         if (data.section !== "body") return;
         const colName = headers[data.column.index];
@@ -149,12 +205,15 @@ export async function exportToPDF(title: string, rows: ExportRow[], options?: Ex
           data.cell.styles.textColor = [205, 102, 51];
         }
 
-        const estadoVal = String(data.row.cells[headers.indexOf("Estado")]?.raw ?? "");
-        if (estadoVal.toLowerCase().includes("bajo")) {
-          data.cell.styles.fillColor = [254, 248, 248];
-          if (colName === "Estado") {
-            data.cell.styles.textColor = [185, 28, 28];
-            data.cell.styles.fontStyle = "bold";
+        const estadoIdx = headers.indexOf("Estado");
+        if (estadoIdx !== -1) {
+          const estadoVal = String(data.row.cells[estadoIdx]?.raw ?? "");
+          if (estadoVal.toLowerCase().includes("bajo")) {
+            data.cell.styles.fillColor = [254, 248, 248];
+            if (colName === "Estado") {
+              data.cell.styles.textColor = [185, 28, 28];
+              data.cell.styles.fontStyle = "bold";
+            }
           }
         }
       },
@@ -189,6 +248,7 @@ export async function exportToPDF(title: string, rows: ExportRow[], options?: Ex
   }
 }
 
+// <--- MODIFICADO: También actualizamos exportToExcel para soportar columnAlignments
 export async function exportToExcel(title: string, rows: ExportRow[], options?: ExportFileOptions): Promise<void> {
   try {
     const xlsxMod = await import("xlsx-js-style");
@@ -261,6 +321,12 @@ export async function exportToExcel(title: string, rows: ExportRow[], options?: 
 
       const headersRow = hasIngredient ? 4 : 2;
       headers.forEach((h, i) => {
+        // <--- MODIFICADO: Aplicar alineación personalizada si existe en columnAlignments
+        let horizontalAlign: "left" | "center" | "right" = "center";
+        if (options?.columnAlignments && options.columnAlignments[h]) {
+          horizontalAlign = options.columnAlignments[h];
+        }
+        
         const cell = XLSX.utils.encode_cell({ r: headersRow, c: i });
         ws[cell] = {
           v: h,
@@ -268,7 +334,7 @@ export async function exportToExcel(title: string, rows: ExportRow[], options?: 
           s: {
             font: { bold: true, color: { rgb: "6B5030" } },
             fill: { fgColor: { rgb: "F1B53E" } },
-            alignment: { horizontal: "center" },
+            alignment: { horizontal: horizontalAlign }, // <--- MODIFICADO: usa alineación personalizada
           },
         };
       });
@@ -276,8 +342,30 @@ export async function exportToExcel(title: string, rows: ExportRow[], options?: 
       const dataStartRow = hasIngredient ? 5 : 3;
       chunk.forEach((row, rowIdx) => {
         headers.forEach((h, colIdx) => {
+          // <--- MODIFICADO: Aplicar alineación a los datos según columnAlignments
+          let horizontalAlign: "left" | "center" | "right" = "left";
+          
+          // Por defecto, números van a la derecha
+          const lowerHeader = h.toLowerCase();
+          const isNumberColumn = ["importe", "total", "precio", "costo", "monto", "subtotal", "iva", "impuesto", "cantidad", "stock", "entrada", "salida"].some(k => lowerHeader.includes(k));
+          
+          if (isNumberColumn) {
+            horizontalAlign = "right";
+          }
+          
+          // Si hay columnAlignments personalizado, sobrescribe
+          if (options?.columnAlignments && options.columnAlignments[h]) {
+            horizontalAlign = options.columnAlignments[h];
+          }
+          
           const cell = XLSX.utils.encode_cell({ r: rowIdx + dataStartRow, c: colIdx });
-          ws[cell] = { v: row[h] ?? "", t: "s" };
+          ws[cell] = { 
+            v: row[h] ?? "", 
+            t: "s",
+            s: {
+              alignment: { horizontal: horizontalAlign }, // <--- MODIFICADO: alineación por columna
+            },
+          };
         });
       });
 

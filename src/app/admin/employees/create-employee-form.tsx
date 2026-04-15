@@ -1,104 +1,180 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useRef } from "react";
 import { createEmployee, type CreateEmployeeState } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { setSpanishValidationMessage, validateSpanishOnInput } from "@/lib/form-validation";
 import {
-  NAME_MAX_LENGTH,
-  NAME_MIN_LENGTH,
-  PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
-  PHONE_MAX_LENGTH,
-  PHONE_MIN_LENGTH,
-  PHONE_PATTERN,
 } from "@/lib/field-rules";
+
+function NativeStyleTooltip({ message }: { message: string }) {
+  return (
+    <div className="absolute z-50 flex flex-col items-start -bottom-[38px] left-6 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+      <div className="ml-3 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-white drop-shadow-[0_-1px_1px_rgba(0,0,0,0.1)]" />
+      <div className="bg-white border border-[#bcbcbc] shadow-[2px_2px_4px_rgba(0,0,0,0.2)] rounded-[2px] px-2 py-1.5 flex items-center gap-2 min-w-max">
+        <div className="bg-[#ff9900] text-white flex items-center justify-center w-[18px] h-[18px] rounded-[1px] font-black text-[14px] leading-none">
+          !
+        </div>
+        <span className="text-[13px] text-[#333] font-normal leading-none">
+          {message}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export function CreateEmployeeForm() {
   const [state, formAction] = useActionState(createEmployee, null as CreateEmployeeState);
   const [open, setOpen] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  
+  // Estado para la máscara del teléfono
+  const [phoneValue, setPhoneValue] = useState("");
+
+  // Ahora guardamos el MENSAJE de error, no solo un booleano
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+    fullName: "",
+    phone: "",
+  });
+
+  // Máscara 0000-0000: No permite letras y pone el guion solo
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value.replace(/\D/g, ""); 
+    if (val.length > 8) val = val.slice(0, 8);
+    let formatted = val;
+    if (val.length > 4) formatted = `${val.slice(0, 4)}-${val.slice(4)}`;
+    
+    setPhoneValue(formatted);
+    setErrors(prev => ({ ...prev, phone: "" }));
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const form = formRef.current;
+    if (!form) return;
+
+    const formData = new FormData(form);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const fullName = formData.get("fullName") as string;
+    const phone = phoneValue;
+
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+
+    const newErrors = {
+      email: !email.trim() 
+        ? "El campo es obligatorio" 
+        : (!email.includes("@") ? "Ingresa un correo válido" : ""),
+      
+      password: !password 
+        ? "El campo es obligatorio" 
+        : (password.length < PASSWORD_MIN_LENGTH ? `Mínimo ${PASSWORD_MIN_LENGTH} caracteres` : ""),
+      
+      fullName: !fullName.trim() 
+        ? "El campo es obligatorio" 
+        : (!nameRegex.test(fullName) ? "Solo se permiten letras" : ""),
+      
+      phone: !phone.trim() 
+        ? "Este campo es obligatorio" 
+        : (phone.length < 9 ? "Ingresa un teléfono válido" : ""),
+    };
+
+    setErrors(newErrors);
+
+    // Si hay algún mensaje de error, cancelamos el envío
+    if (Object.values(newErrors).some(msg => msg !== "")) {
+      e.preventDefault();
+      return;
+    }
+  };
 
   return (
     <div className="max-w-md rounded-md border overflow-hidden">
-      {/* Header colapsable */}
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between px-4 py-3 bg-[#753B19] text-white font-bold uppercase tracking-wide text-sm"
       >
-        <span>Crear empleado</span>
+        <span>Nuevo empleado</span>
         {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
       </button>
 
-      {/* Contenido colapsable */}
       {open && (
         <div className="bg-white p-4">
           <p className="text-sm text-muted-foreground mb-4">Crea una cuenta con rol empleado.</p>
-          <form action={formAction} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="emp-email">Correo *</Label>
+          
+          <form ref={formRef} action={formAction} onSubmit={handleSubmit} className="space-y-4" noValidate>
+
+            <div className="space-y-2 relative">
+              <Label htmlFor="emp-fullName" className="font-semibold">
+                Nombre completo <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="emp-fullName"
+                name="fullName"
+                placeholder="Nombres y apellidos"
+                onChange={() => setErrors(prev => ({ ...prev, fullName: "" }))}
+                className="focus-visible:ring-[#753B19]"
+              />
+              {errors.fullName && <NativeStyleTooltip message={errors.fullName} />}
+            </div>
+
+            <div className="space-y-2 relative">
+              <Label htmlFor="emp-phone" className="font-semibold">
+                Teléfono <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="emp-phone"
+                name="phone"
+                type="text"
+                value={phoneValue}
+                onChange={handlePhoneChange}
+                placeholder="9999-9999"
+                className="focus-visible:ring-[#753B19]"
+              />
+              {errors.phone && <NativeStyleTooltip message={errors.phone} />}
+            </div>
+
+            <div className="space-y-2 relative">
+              <Label htmlFor="emp-email" className="font-semibold">
+                Correo <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="emp-email"
                 name="email"
                 type="email"
-                required
-                autoFocus
-                autoComplete="email"
                 placeholder="example@dominio.com"
-                onInvalid={setSpanishValidationMessage}
-                onInput={validateSpanishOnInput}
+                onChange={() => setErrors(prev => ({ ...prev, email: "" }))}
+                className="focus-visible:ring-[#753B19]"
               />
+              {errors.email && <NativeStyleTooltip message={errors.email} />}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="emp-password">Contraseña *</Label>
+
+            <div className="space-y-2 relative">
+              <Label htmlFor="emp-password" className="font-semibold">
+                Contraseña <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="emp-password"
                 name="password"
                 type="password"
-                required
-                minLength={PASSWORD_MIN_LENGTH}
-                maxLength={PASSWORD_MAX_LENGTH}
-                autoComplete="new-password"
                 placeholder="********"
-                onInvalid={setSpanishValidationMessage}
-                onInput={validateSpanishOnInput}
+                onChange={() => setErrors(prev => ({ ...prev, password: "" }))}
+                className="focus-visible:ring-[#753B19]"
               />
+              {errors.password && <NativeStyleTooltip message={errors.password} />}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="emp-fullName">Nombre completo</Label>
-              <Input
-                id="emp-fullName"
-                name="fullName"
-                minLength={NAME_MIN_LENGTH}
-                maxLength={NAME_MAX_LENGTH}
-                autoComplete="name"
-                placeholder="Nombres y apellidos"
-                onInvalid={setSpanishValidationMessage}
-                onInput={validateSpanishOnInput}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="emp-phone">Teléfono</Label>
-              <Input
-                id="emp-phone"
-                name="phone"
-                type="tel"
-                inputMode="tel"
-                minLength={PHONE_MIN_LENGTH}
-                maxLength={PHONE_MAX_LENGTH}
-                pattern={PHONE_PATTERN}
-                autoComplete="tel"
-                placeholder="9999-9999"
-                onInvalid={setSpanishValidationMessage}
-                onInput={validateSpanishOnInput}
-              />
-            </div>
-            {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
-            {state?.success && <p className="text-sm font-medium text-brand-green">{state.success}</p>}
-            <Button type="submit">Crear empleado</Button>
+
+            {state?.error && <p className="text-sm text-destructive font-medium">{state.error}</p>}
+            {state?.success && <p className="text-sm font-medium text-green-600">{state.success}</p>}
+
+            <Button type="submit" className="w-full bg-[#F1B53E] hover:bg-[#d9a337] text-[#753B19] font-bold mt-5">
+              Crear empleado
+            </Button>
           </form>
         </div>
       )}
