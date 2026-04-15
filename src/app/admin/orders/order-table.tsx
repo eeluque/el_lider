@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getNextOrderStatus } from "@/lib/orders";
 import { updateOrderStatus } from "./actions";
 import type { Order, OrderStatus } from "@/types";
 
@@ -60,9 +61,22 @@ export function OrderTable({ orders }: { orders: Order[] }) {
               </TableCell>
               <TableCell>L {Number(o.total_price).toFixed(2)}</TableCell>
               <TableCell>
-                <Badge variant={o.status === "cancelled" ? "destructive" : "secondary"}>
-                  {STATUS_LABELS[o.status]}
-                </Badge>
+                {getNextOrderStatus(o.status) ? (
+                  <button
+                    type="button"
+                    onClick={() => changeStatus(o.id, getNextOrderStatus(o.status)!)}
+                    className="cursor-pointer"
+                    title={`Cambiar a ${STATUS_LABELS[getNextOrderStatus(o.status)!]}`}
+                  >
+                    <Badge variant={o.status === "cancelled" ? "destructive" : "secondary"}>
+                      {STATUS_LABELS[o.status]}
+                    </Badge>
+                  </button>
+                ) : (
+                  <Badge variant={o.status === "cancelled" ? "destructive" : "secondary"}>
+                    {STATUS_LABELS[o.status]}
+                  </Badge>
+                )}
               </TableCell>
               <TableCell>
                 <div className="flex flex-wrap gap-1">

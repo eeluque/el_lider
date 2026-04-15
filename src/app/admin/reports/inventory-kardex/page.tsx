@@ -1,13 +1,13 @@
 import Image from "next/image";
 import { Suspense } from "react";
+import { ReportBanner } from "@/components/admin/report-banner";
 import { ReportDateRangeFiltersSuspense } from "@/components/admin/report-date-range-filters";
 import { ReportExportButtons } from "@/components/admin/report-export-buttons";
 import { ReportPagination } from "@/components/admin/report-pagination";
-import { defaultReportRange } from "@/lib/date-range";
+import { defaultReportRange, toLocalDateString } from "@/lib/date-range";
 import { paginateSlice, parseReportPage, REPORT_PAGE_SIZE } from "@/lib/report-pagination";
 import { getIngredients } from "@/services/inventory";
 import { getInventoryKardex } from "@/services/reports";
-import { toLocalDateString } from "@/lib/date-range";
 
 function formatDate(iso: string) {
   const date = new Date(iso);
@@ -61,10 +61,12 @@ export default async function InventoryKardexPage({
     getIngredients(true),
   ]);
 
-  const selectedIngredient = ingredients.find((ingredient: { id: string; name: string }) => ingredient.id === params.ingredientId);
+  const selectedIngredient = ingredients.find(
+    (ingredient: { id: string; name: string }) => ingredient.id === params.ingredientId
+  );
   const headerIngredientName = selectedIngredient?.name ?? "Todos los ingredientes";
   const ingredientUnit = selectedIngredient?.unit ?? "";
-  const isSingleIngredient = !!params.ingredientId;
+  const isSingleIngredient = Boolean(params.ingredientId);
 
   const chronological = [...(movements as Movement[])].sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -103,10 +105,17 @@ export default async function InventoryKardexPage({
     Fecha: formatDate(movement.created_at).replace("\n", " "),
     ...(!params.ingredientId && { Ingrediente: formatRowIngredient(movement) }),
     "Tipo de movimiento":
-      movement.movement_type === "IN" ? "Entrada" : movement.movement_type === "ADJUSTMENT" ? "Ajuste" : "Salida",
+      movement.movement_type === "IN"
+        ? "Entrada"
+        : movement.movement_type === "ADJUSTMENT"
+          ? "Ajuste"
+          : "Salida",
     Detalle: movement.reason ?? "",
     Entrada: movement.movement_type === "IN" ? `+${movement.quantity}` : "—",
-    Salida: movement.movement_type === "OUT" || movement.movement_type === "ADJUSTMENT" ? `-${movement.quantity}` : "—",
+    Salida:
+      movement.movement_type === "OUT" || movement.movement_type === "ADJUSTMENT"
+        ? `-${movement.quantity}`
+        : "—",
     Stock: movement.runningStock,
     Responsable: movement.responsible?.full_name ?? "",
     Observaciones: movement.notes ?? "",
@@ -115,10 +124,17 @@ export default async function InventoryKardexPage({
   const periodLabel = (() => {
     const start = new Date(`${from}T12:00:00`);
     const end = new Date(`${to}T12:00:00`);
-    const startStr = start.toLocaleDateString("es-HN", { day: "2-digit", month: "short", year: "numeric" });
-    const endStr = end.toLocaleDateString("es-HN", { day: "2-digit", month: "short", year: "numeric" });
-  
-    // Si son el mismo día, muestra solo una fecha
+    const startStr = start.toLocaleDateString("es-HN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+    const endStr = end.toLocaleDateString("es-HN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
     return startStr === endStr ? startStr : `${startStr} – ${endStr}`;
   })();
 
@@ -126,26 +142,6 @@ export default async function InventoryKardexPage({
     <>
       <style>{`
         .kardex-root * { font-family: 'Outfit', sans-serif; }
-        .kardex-header {
-          background: #eeba54;
-          border-radius: 0;
-          padding: 18px 24px 14px;
-          text-align: center;
-        }
-        .kardex-filter label { font-weight: 600; font-size: 14px; color: #1a1a1a; }
-        .kardex-filter input[type="date"],
-        .kardex-filter select {
-          border: 1.5px solid #d4c7b0;
-          border-radius: 8px;
-          padding: 7px 12px;
-          font-size: 14px;
-          font-family: 'Outfit', sans-serif;
-          background: #fffdf8;
-          color: #1a1a1a;
-          outline: none;
-        }
-        .kardex-filter input[type="date"]:focus,
-        .kardex-filter select:focus { border-color: #e8a838; }
         .kardex-card {
           background: #753b19;
           border-radius: 10px 10px 0 0;
@@ -248,8 +244,8 @@ export default async function InventoryKardexPage({
         }
       `}</style>
 
-      <div className="kardex-root" style={{ maxWidth: 1460, margin: "0 auto", padding: "0 16px 40px" }}>
-        <div style={{ display: "flex", justifyContent: "flex-end", margin: "24px 0 -16px" }}>
+      <div className="space-y-6">
+        <div className="flex justify-end">
           <ReportExportButtons
             title="Kardex de movimientos de insumos"
             rows={exportRows}
@@ -260,50 +256,55 @@ export default async function InventoryKardexPage({
           />
         </div>
 
-        <div className="kardex-header" style={{ marginTop: 24 }}>
-          <h1 style={{ color: "#633b22", fontWeight: 700, fontSize: 22, margin: 0, fontFamily: "'Outfit', serif" }}>
-            Kardex de Movimientos de Insumos
-          </h1>
-          <p style={{ color: "#6f6868", fontSize: 13, margin: "6px 0 0", fontWeight: 400 }}>Período: {periodLabel}</p>
-        </div>
-        <div style={{ borderTop: "3.5px solid #f1b53e", margin: "8px 0 0" }} />
+        <ReportBanner
+          title="Kardex de Movimientos de Insumos"
+          subtitle={`Período: ${periodLabel}`}
+        />
 
-        <div className="mb-6 rounded-xl border border-primary/10 bg-card p-4">
+        <div className="rounded-xl border border-primary/10 bg-card p-4">
           <ReportDateRangeFiltersSuspense
             from={from}
             to={to}
-            variant="kardex"
             formFieldNames={["ingredientId"]}
             submitLabel="Filtrar"
-            className="kardex-filter"
           >
-            <label htmlFor="k-ing" style={{ marginLeft: 2, marginTop: 10, color: "rgb(155 114 89)"}} className="uppercase tracking-wide text-sm font-semibold self-center">
-              Ingrediente:
-            </label>
-            <select id="k-ing" name="ingredientId" defaultValue={params.ingredientId ?? ""} style={{marginTop: 10}}>
-              <option value="">Todos</option>
-              {(ingredients as { id: string; name: string }[]).map((ingredient) => (
-                <option key={ingredient.id} value={ingredient.id}>
-                  {ingredient.name}
-                </option>
-              ))}
-            </select>
+            <div>
+              <label
+                htmlFor="k-ing"
+                className="mb-1 block text-sm font-semibold uppercase tracking-wide text-[rgb(117,59,25)]"
+              >
+                Ingrediente
+              </label>
+              <select
+                id="k-ing"
+                name="ingredientId"
+                defaultValue={params.ingredientId ?? ""}
+                className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Todos</option>
+                {(ingredients as { id: string; name: string }[]).map((ingredient) => (
+                  <option key={ingredient.id} value={ingredient.id}>
+                    {ingredient.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </ReportDateRangeFiltersSuspense>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-md">
+        <div className="kardex-root overflow-hidden rounded-2xl border border-primary/15 bg-card shadow-md">
           <div className="kardex-card">
             <div className="kardex-card-left">
               <span className="kardex-card-name">{headerIngredientName}</span>
-              {ingredientUnit && <span className="kardex-unit-badge">{ingredientUnit}</span>}
+              {ingredientUnit ? <span className="kardex-unit-badge">{ingredientUnit}</span> : null}
             </div>
             <div style={{ textAlign: "right", fontFamily: "'Playfair Display', serif" }}>
-              {isSingleIngredient && (
+              {isSingleIngredient ? (
                 <>
                   <div className="kardex-stock-label">Stock actual:</div>
                   <div>
                     <span className="kardex-stock-value">{currentStock}</span>
-                    {ingredientUnit && (
+                    {ingredientUnit ? (
                       <span
                         style={{
                           color: "#ffffff",
@@ -315,10 +316,10 @@ export default async function InventoryKardexPage({
                       >
                         {ingredientUnit} en existencia
                       </span>
-                    )}
+                    ) : null}
                   </div>
                 </>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -327,18 +328,18 @@ export default async function InventoryKardexPage({
               <thead>
                 <tr>
                   <th style={{ width: "9%" }}>Fecha</th>
-                  {!params.ingredientId && <th style={{ width: "12%" }}>Ingrediente</th>}
+                  {!params.ingredientId ? <th style={{ width: "12%" }}>Ingrediente</th> : null}
                   <th style={{ width: "13%", textAlign: "center" }}>Tipo de movimiento</th>
                   <th style={{ width: "20%", textAlign: "center" }}>Detalle / motivo</th>
                   <th style={{ width: "8%", textAlign: "right" }}>Entrada</th>
                   <th style={{ width: "8%", textAlign: "right" }}>Salida</th>
-                  {isSingleIngredient && <th style={{ width: "7%", textAlign: "right" }}>Stock</th>}
+                  {isSingleIngredient ? <th style={{ width: "7%", textAlign: "right" }}>Stock</th> : null}
                   <th style={{ width: "15%", textAlign: "center" }}>Responsable</th>
                   <th style={{ width: "8%", textAlign: "center" }}>Observaciones</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.length === 0 && (
+                {rows.length === 0 ? (
                   <tr>
                     <td
                       colSpan={!params.ingredientId ? 8 : isSingleIngredient ? 8 : 7}
@@ -349,7 +350,7 @@ export default async function InventoryKardexPage({
                         : "Sin movimientos en este período."}
                     </td>
                   </tr>
-                )}
+                ) : null}
                 {pagedRows.map((movement) => {
                   const movementType = movement.movement_type.toUpperCase();
                   const isEntry = movementType === "IN";
@@ -360,9 +361,11 @@ export default async function InventoryKardexPage({
 
                   return (
                     <tr key={movement.id}>
-                      <td style={{ whiteSpace: "pre-line", color: "#6b5030", fontSize: 12 }}>{formatDate(movement.created_at)}</td>
+                      <td style={{ whiteSpace: "pre-line", color: "#6b5030", fontSize: 12 }}>
+                        {formatDate(movement.created_at)}
+                      </td>
 
-                      {!params.ingredientId && (
+                      {!params.ingredientId ? (
                         <td style={{ color: "#2a1f0f", fontWeight: 600 }}>
                           {movement.ingredient?.name ?? "—"}
                           {movement.ingredient?.unit ? (
@@ -371,7 +374,7 @@ export default async function InventoryKardexPage({
                             </span>
                           ) : null}
                         </td>
-                      )}
+                      ) : null}
 
                       <td style={{ textAlign: "center" }}>
                         {isEntry ? (
@@ -379,7 +382,14 @@ export default async function InventoryKardexPage({
                             <span className="badge-icon">↑</span> Entrada
                           </span>
                         ) : isAdjustment ? (
-                          <span className="badge" style={{ background: "#f0e6d8", color: "#6b5030", border: "1px solid #d4c7b0" }}>
+                          <span
+                            className="badge"
+                            style={{
+                              background: "#f0e6d8",
+                              color: "#6b5030",
+                              border: "1px solid #d4c7b0",
+                            }}
+                          >
                             Ajuste
                           </span>
                         ) : (
@@ -391,14 +401,25 @@ export default async function InventoryKardexPage({
 
                       <td style={{ color: "#4a3820" }}>{movement.reason ?? "—"}</td>
                       <td className={isEntry ? "qty-entrada" : "qty-dash"}>{isEntry ? `+${quantity}` : "—"}</td>
-                      <td className={!isEntry ? "qty-salida" : "qty-dash"}>{!isEntry ? `-${quantity}` : "—"}</td>
+                      <td className={!isEntry ? "qty-salida" : "qty-dash"}>
+                        {!isEntry ? `-${quantity}` : "—"}
+                      </td>
 
-                      {isSingleIngredient && <td style={{ fontWeight: 600, textAlign: "right" }}>{movement.runningStock}</td>}
+                      {isSingleIngredient ? (
+                        <td style={{ fontWeight: 600, textAlign: "right" }}>{movement.runningStock}</td>
+                      ) : null}
 
                       <td style={{ whiteSpace: "nowrap", textAlign: "center" }}>
                         <div className="responsible-cell">
                           {avatarUrl ? (
-                            <Image src={avatarUrl} alt={responsibleName} width={30} height={30} className="avatar" unoptimized />
+                            <Image
+                              src={avatarUrl}
+                              alt={responsibleName}
+                              width={30}
+                              height={30}
+                              className="avatar"
+                              unoptimized
+                            />
                           ) : (
                             <div className="avatar-initials" title={responsibleName}>
                               {responsibleName !== "—" ? getInitials(responsibleName) : "?"}
@@ -408,7 +429,15 @@ export default async function InventoryKardexPage({
                         </div>
                       </td>
 
-                      <td style={{ textAlign: "left", color: "#888", fontStyle: movement.notes ? "normal" : "italic" }}>{movement.notes ?? ""}</td>
+                      <td
+                        style={{
+                          textAlign: "left",
+                          color: "#888",
+                          fontStyle: movement.notes ? "normal" : "italic",
+                        }}
+                      >
+                        {movement.notes ?? ""}
+                      </td>
                     </tr>
                   );
                 })}
@@ -416,11 +445,11 @@ export default async function InventoryKardexPage({
             </table>
           </div>
 
-          {rows.length > REPORT_PAGE_SIZE && (
+          {rows.length > REPORT_PAGE_SIZE ? (
             <Suspense fallback={null}>
               <ReportPagination totalItems={rows.length} pageSize={REPORT_PAGE_SIZE} />
             </Suspense>
-          )}
+          ) : null}
         </div>
       </div>
     </>

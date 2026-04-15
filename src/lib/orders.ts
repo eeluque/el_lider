@@ -10,6 +10,7 @@ export function getNextOrderStatus(status: OrderStatus): OrderStatus | null {
   if (status === "pending") return "preparing";
   if (status === "preparing") return "ready";
   if (status === "ready") return "delivered";
+  if (status === "delivered") return "pending";
   return null;
 }
 
