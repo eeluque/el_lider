@@ -26,7 +26,7 @@ export default async function AccountRewardsPage() {
     <div>
       <h1 className="text-2xl font-bold">Puntos de recompensa</h1>
       <p className="mt-1 text-neutral-600">Saldo actual: <strong>{profile?.points_balance ?? 0}</strong> puntos.</p>
-      <p className="mt-2 text-sm text-neutral-500">Regla MVP: 1 punto por cada L50 en pedidos completados (configurable más adelante).</p>
+      <p className="mt-2 text-sm text-neutral-500">Regalía baleada con todo: 1 punto por cada baleada con todo en pedidos completados.</p>
       {transactions.length > 0 ? (
         <div className="mt-4 overflow-x-auto rounded-md border">
           <table className="w-full text-sm">
