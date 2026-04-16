@@ -12,7 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { MenuItem } from "@/types";
-import { Pencil } from "lucide-react";
+import { Pencil, Save } from "lucide-react";
 import { useActionState, useState, useEffect } from "react";
 import { updateMenuItem, type MenuItemFormState } from "./actions";
 
@@ -207,7 +207,7 @@ function EditableMenuRow({ item, canEdit }: { item: MenuItem; canEdit: boolean }
             <div className="flex gap-1">
               <Button type="submit" form={`edit-${item.id}`} size="sm"
                 className="bg-[#588f3d] hover:bg-[#4a7a33] text-white border-0 font-bold">
-                Guardar
+                <Save className="size-3 mr-1" /> Guardar
               </Button>
               <Button type="button" size="sm"
                 className="bg-[#CD6633] hover:bg-[#b85a2d] text-white border-0 font-bold"

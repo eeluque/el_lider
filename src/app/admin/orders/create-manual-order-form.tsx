@@ -75,7 +75,7 @@ export function CreateManualOrderForm({ menuItems }: { menuItems: MenuItem[] }) 
   return (
     <div className="space-y-4">
       <div className="mb-8">
-        <h1 className="outfit text-3xl font-bold text-[#753B19]">Registrar Pedido</h1>
+        <h1 className="outfit font-serif text-3xl font-bold text-foreground">Registrar Pedido</h1>
         <p className="text-muted-foreground">Captura pedidos de WhatsApp, llamadas o presenciales.</p>
       </div>
 

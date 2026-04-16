@@ -13,7 +13,7 @@ export default async function AdminEmployeesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Empleados</h1>
+        <h1 className="outfit font-serif text-3xl font-bold text-foreground">Empleados</h1>
         <p className="mt-1 text-muted-foreground">Usuarios admin y empleados.</p>
       </div>
       <CreateEmployeeForm />
