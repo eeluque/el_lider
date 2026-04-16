@@ -14,7 +14,8 @@
     "seed:pagination": "tsx scripts/seed-pagination-test-data.ts",
     "seed": "tsx scripts/seed.ts",
     "upsert-admin": "tsx scripts/upsert-admin-user.ts",
-    "test:unitaria": "vitest run scripts/unitaria.test.ts"
+    "test:unitaria": "npx vitest run scripts/unitaria.test.ts",
+    "test:vinculos": "npx vitest run scripts/vinculos.test.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",

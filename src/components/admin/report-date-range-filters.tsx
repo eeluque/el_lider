@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { Suspense, type ReactNode } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { Suspense, type ReactNode, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   currentWeekRange,
   formatDateInputDisplay,
@@ -19,101 +18,80 @@ type Props = {
   className?: string;
   children?: ReactNode;
   submitLabel?: string;
-  variant?: "admin" | "kardex";
 };
 
-function useBuildHref() {
-  const pathname = usePathname();
+type PresetRange = {
+  from: string;
+  to: string;
+};
+
+function PresetButtons({
+  onSelect,
+}: {
+  onSelect: (range: PresetRange) => void;
+}) {
   const searchParams = useSearchParams();
+  const selectedFrom = searchParams.get("from");
+  const selectedTo = searchParams.get("to");
 
-  return (nextFrom: string, nextTo: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("from", nextFrom);
-    params.set("to", nextTo);
-    return `${pathname}?${params.toString()}`;
-  };
-}
-
-function PresetLinks({ variant }: { variant: "admin" | "kardex" }) {
-  const build = useBuildHref();
-  const today = todayRange();
-  const last7Days = last7DaysRange();
-  const currentWeek = currentWeekRange();
-
-  if (variant === "kardex") {
-    return (
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Link
-          href={build(today.from, today.to)}
-          className="rounded-full border border-[#d4c7b0] bg-white px-3 py-1.5 text-xs font-semibold text-[#6b5030] transition hover:border-[#e8a838]"
-        >
-          Hoy
-        </Link>
-        <Link
-          href={build(last7Days.from, last7Days.to)}
-          className="rounded-full border border-[#d4c7b0] bg-white px-3 py-1.5 text-xs font-semibold text-[#6b5030] transition hover:border-[#e8a838]"
-        >
-          Últimos 7 días
-        </Link>
-        <Link
-          href={build(currentWeek.from, currentWeek.to)}
-          className="rounded-full border border-[#d4c7b0] bg-white px-3 py-1.5 text-xs font-semibold text-[#6b5030] transition hover:border-[#e8a838]"
-        >
-          Semana actual
-        </Link>
-      </div>
-    );
-  }
+  const presets = [
+    { label: "Hoy", range: todayRange() },
+    { label: "Últimos 7 días", range: last7DaysRange() },
+    { label: "Esta semana", range: currentWeekRange() },
+  ] as const;
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Link href={build(today.from, today.to)} className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-primary/30")}>
-        Hoy
-      </Link>
-      <Link
-        href={build(last7Days.from, last7Days.to)}
-        className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-primary/30")}
-      >
-        Últimos 7 días
-      </Link>
-      <Link
-        href={build(currentWeek.from, currentWeek.to)}
-        className={cn(buttonVariants({ variant: "outline", size: "sm" }), "border-primary/30")}
-      >
-        Semana actual
-      </Link>
+      {presets.map(({ label, range }) => {
+        const isActive = selectedFrom === range.from && selectedTo === range.to;
+
+        return (
+          <button
+            key={label}
+            type="button"
+            onClick={() => onSelect(range)}
+            data-active={isActive}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "border-primary/30 transition-colors data-[active=true]:border-primary data-[active=true]:bg-primary/10 data-[active=true]:text-[rgb(117,59,25)]"
+            )}
+          >
+            {label}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-function DateInputField({
+function DateField({
   label,
   name,
   value,
-  variant,
+  onChange,
 }: {
   label: string;
   name: "from" | "to";
   value: string;
-  variant: "admin" | "kardex";
+  onChange: (value: string) => void;
 }) {
   return (
     <div>
-      <label className={cn("mb-1 block text-xs font-medium text-muted-foreground", variant === "kardex" && "!text-[#1a1a1a]")}>
+      <label className="mb-1 block text-sm font-semibold uppercase tracking-wide text-[rgb(117,59,25)]">
         {label}
       </label>
       <input
         type="date"
         name={name}
         lang="es-HN"
-        defaultValue={value}
+        value={value}
         title="Formato: dd/mm/yyyy"
-        className={cn(
-          "rounded-lg border border-input bg-background px-2 py-2 text-sm",
-          variant === "kardex" && "border-[#d4c7b0] bg-[#fffdf8]"
-        )}
+        onChange={(event) => onChange(event.target.value)}
+        className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
       />
-      <p className="mt-1 text-[11px] text-muted-foreground">Formato: {formatDateInputDisplay(value)}</p>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        Formato: {formatDateInputDisplay(value)}
+      </p>
     </div>
   );
 }
@@ -125,74 +103,76 @@ export function ReportDateRangeFilters({
   className,
   children,
   submitLabel = "Aplicar rango",
-  variant = "admin",
 }: Props) {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const skipHidden = new Set(["from", "to", ...formFieldNames]);
+  const [fromValue, setFromValue] = useState(from);
+  const [toValue, setToValue] = useState(to);
 
   const hiddenEntries: [string, string][] = [];
   searchParams.forEach((value, key) => {
     if (!skipHidden.has(key)) hiddenEntries.push([key, value]);
   });
 
-  return (
-  <div className={cn("flex flex-col gap-3", className)}>
-    <form method="get" action={pathname} className={cn("flex flex-col gap-3", variant === "kardex" && "kardex-filter")}>
-      {hiddenEntries.map(([k, v]) => (
-        <input key={k} type="hidden" name={k} value={v} />
-      ))}
+  function navigateWithRange(nextFrom: string, nextTo: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("from", nextFrom);
+    params.set("to", nextTo);
+    params.delete("page");
+    router.push(`${pathname}?${params.toString()}`);
+  }
 
-      {/* Fila 1: Acceso rápido + fechas + botón */}
-      <div className="flex flex-wrap items-center gap-6">
-        <div className="flex flex-col gap-2">
-          <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Acceso rápido:</span>
-          <PresetLinks variant={variant} />
-        </div>
-        <div className="flex flex-wrap items-end gap-3 ml-30">
-          <div>
-            <label style={{color: "rgb(155 114 89)"}} className="mb-1 block text-sm font-semibold uppercase tracking-wide">
-              Desde
-            </label>
-            <input type="date" name="from" defaultValue={from || undefined}
-              className={cn("rounded-lg border border-input bg-background px-2 py-2 text-sm", variant === "kardex" && "border-[#d4c7b0] bg-[#fffdf8]")}
+  return (
+    <div className={cn("flex flex-col gap-4", className)}>
+      <form method="get" action={pathname} className="flex flex-col gap-4">
+        {hiddenEntries.map(([key, value]) => (
+          <input key={key} type="hidden" name={key} value={value} />
+        ))}
+
+        <div className="flex flex-wrap items-start gap-6">
+          <div className="flex min-w-[220px] flex-col gap-2">
+            <span className="text-sm font-semibold uppercase tracking-wide text-[rgb(117,59,25)]">
+              Acceso rápido
+            </span>
+            <PresetButtons
+              onSelect={(range) => {
+                setFromValue(range.from);
+                setToValue(range.to);
+                navigateWithRange(range.from, range.to);
+              }}
             />
           </div>
-          <div>
-            <label style={{color: "rgb(155 114 89)"}} className="mb-1 block text-sm font-semibold uppercase tracking-wide">
-              Hasta
-            </label>
-            <input type="date" name="to" defaultValue={to || undefined}
-              className={cn("rounded-lg border border-input bg-background px-2 py-2 text-sm", variant === "kardex" && "border-[#d4c7b0] bg-[#fffdf8]")}
-            />
-          </div>
-          {/* Botón solo si NO es kardex */}
-          {variant !== "kardex" && (
-            <button type="submit" className={cn(buttonVariants({ variant: "secondary", size: "sm" }), "bg-[#CD6633] hover:bg-[#b85a2d] text-white border-0")}>
+
+          <div className="flex flex-wrap items-end gap-3">
+            <DateField label="Desde" name="from" value={fromValue} onChange={setFromValue} />
+            <DateField label="Hasta" name="to" value={toValue} onChange={setToValue} />
+            <button
+              type="submit"
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" }),
+                "border-0 bg-[#CD6633] text-white hover:bg-[#b85a2d]"
+              )}
+            >
               {submitLabel}
             </button>
-          )}
+          </div>
         </div>
-      </div>
 
-      {/* Fila 2: solo para kardex — Ingrediente + Filtrar */}
-      <div className="flex flex-wrap items-end gap-3">
-        {children}
-        {variant === "kardex" && (
-          <button type="submit" className="bg-[#CD6633] text-white border-0 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-[#b85a2d]">
-            {submitLabel}
-          </button>
-        )}
-      </div>
-    </form>
-  </div>
-);
+        {children ? <div className="flex flex-wrap items-end gap-3">{children}</div> : null}
+      </form>
+    </div>
+  );
 }
 
 export function ReportDateRangeFiltersSuspense(props: Props) {
   return (
     <Suspense fallback={<div className="h-5 animate-pulse rounded-lg bg-muted/40" aria-hidden />}>
-      <ReportDateRangeFilters {...props} />
+      <ReportDateRangeFilters
+        key={`${props.from}-${props.to}-${props.formFieldNames?.join(",") ?? ""}`}
+        {...props}
+      />
     </Suspense>
   );
 }
