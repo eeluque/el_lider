@@ -1,14 +1,13 @@
 "use client";
 
-import { useActionState, useState, useRef } from "react";
+import { useActionState, useState, useRef, useEffect } from "react";
 import { createEmployee, type CreateEmployeeState } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import {
-  PASSWORD_MIN_LENGTH,
-} from "@/lib/field-rules";
+import { PASSWORD_MIN_LENGTH } from "@/lib/field-rules";
+import { ToastNotification } from "@/components/ui/toast-notification";
 
 function NativeStyleTooltip({ message }: { message: string }) {
   return (
@@ -30,11 +29,9 @@ export function CreateEmployeeForm() {
   const [state, formAction] = useActionState(createEmployee, null as CreateEmployeeState);
   const [open, setOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
-  
-  // Estado para la máscara del teléfono
   const [phoneValue, setPhoneValue] = useState("");
+  const [toast, setToast] = useState<string | null>(null);
 
-  // Ahora guardamos el MENSAJE de error, no solo un booleano
   const [errors, setErrors] = useState({
     email: "",
     password: "",
@@ -42,13 +39,20 @@ export function CreateEmployeeForm() {
     phone: "",
   });
 
-  // Máscara 0000-0000: No permite letras y pone el guion solo
+  useEffect(() => {
+    if (state?.success) {
+      setToast(state.success);
+      // Resetea el form al guardar exitosamente
+      formRef.current?.reset();
+      setPhoneValue("");
+    }
+  }, [state?.success]);
+
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\D/g, ""); 
+    let val = e.target.value.replace(/\D/g, "");
     if (val.length > 8) val = val.slice(0, 8);
     let formatted = val;
     if (val.length > 4) formatted = `${val.slice(0, 4)}-${val.slice(4)}`;
-    
     setPhoneValue(formatted);
     setErrors(prev => ({ ...prev, phone: "" }));
   };
@@ -66,26 +70,22 @@ export function CreateEmployeeForm() {
     const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 
     const newErrors = {
-      email: !email.trim() 
-        ? "El campo es obligatorio" 
+      email: !email.trim()
+        ? "El campo es obligatorio"
         : (!email.includes("@") ? "Ingresa un correo válido" : ""),
-      
-      password: !password 
-        ? "El campo es obligatorio" 
+      password: !password
+        ? "El campo es obligatorio"
         : (password.length < PASSWORD_MIN_LENGTH ? `Mínimo ${PASSWORD_MIN_LENGTH} caracteres` : ""),
-      
-      fullName: !fullName.trim() 
-        ? "El campo es obligatorio" 
+      fullName: !fullName.trim()
+        ? "El campo es obligatorio"
         : (!nameRegex.test(fullName) ? "Solo se permiten letras" : ""),
-      
-      phone: !phone.trim() 
-        ? "Este campo es obligatorio" 
+      phone: !phone.trim()
+        ? "Este campo es obligatorio"
         : (phone.length < 9 ? "Ingresa un teléfono válido" : ""),
     };
 
     setErrors(newErrors);
 
-    // Si hay algún mensaje de error, cancelamos el envío
     if (Object.values(newErrors).some(msg => msg !== "")) {
       e.preventDefault();
       return;
@@ -93,91 +93,94 @@ export function CreateEmployeeForm() {
   };
 
   return (
-    <div className="max-w-md rounded-md border overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-[#753B19] text-white font-bold uppercase tracking-wide text-sm"
-      >
-        <span>Nuevo empleado</span>
-        {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-      </button>
+    <>
+      {toast && <ToastNotification message={toast} onClose={() => setToast(null)} />}
 
-      {open && (
-        <div className="bg-white p-4">
-          <p className="text-sm text-muted-foreground mb-4">Crea una cuenta con rol empleado.</p>
-          
-          <form ref={formRef} action={formAction} onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <div className="max-w-md rounded-md border overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-[#753B19] text-white font-bold uppercase tracking-wide text-sm"
+        >
+          <span>Nuevo empleado</span>
+          {open ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+        </button>
 
-            <div className="space-y-2 relative">
-              <Label htmlFor="emp-fullName" className="font-semibold">
-                Nombre completo <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="emp-fullName"
-                name="fullName"
-                placeholder="Nombres y apellidos"
-                onChange={() => setErrors(prev => ({ ...prev, fullName: "" }))}
-                className="focus-visible:ring-[#753B19]"
-              />
-              {errors.fullName && <NativeStyleTooltip message={errors.fullName} />}
-            </div>
+        {open && (
+          <div className="bg-white p-4">
+            <p className="text-sm text-muted-foreground mb-4">Crea una cuenta con rol empleado.</p>
 
-            <div className="space-y-2 relative">
-              <Label htmlFor="emp-phone" className="font-semibold">
-                Teléfono <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="emp-phone"
-                name="phone"
-                type="text"
-                value={phoneValue}
-                onChange={handlePhoneChange}
-                placeholder="9999-9999"
-                className="focus-visible:ring-[#753B19]"
-              />
-              {errors.phone && <NativeStyleTooltip message={errors.phone} />}
-            </div>
+            <form ref={formRef} action={formAction} onSubmit={handleSubmit} className="space-y-4" noValidate>
 
-            <div className="space-y-2 relative">
-              <Label htmlFor="emp-email" className="font-semibold">
-                Correo <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="emp-email"
-                name="email"
-                type="email"
-                placeholder="example@dominio.com"
-                onChange={() => setErrors(prev => ({ ...prev, email: "" }))}
-                className="focus-visible:ring-[#753B19]"
-              />
-              {errors.email && <NativeStyleTooltip message={errors.email} />}
-            </div>
+              <div className="space-y-2 relative">
+                <Label htmlFor="emp-fullName" className="font-semibold">
+                  Nombre completo <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="emp-fullName"
+                  name="fullName"
+                  placeholder="Nombres y apellidos"
+                  onChange={() => setErrors(prev => ({ ...prev, fullName: "" }))}
+                  className="focus-visible:ring-[#753B19]"
+                />
+                {errors.fullName && <NativeStyleTooltip message={errors.fullName} />}
+              </div>
 
-            <div className="space-y-2 relative">
-              <Label htmlFor="emp-password" className="font-semibold">
-                Contraseña <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="emp-password"
-                name="password"
-                type="password"
-                placeholder="********"
-                onChange={() => setErrors(prev => ({ ...prev, password: "" }))}
-                className="focus-visible:ring-[#753B19]"
-              />
-              {errors.password && <NativeStyleTooltip message={errors.password} />}
-            </div>
+              <div className="space-y-2 relative">
+                <Label htmlFor="emp-phone" className="font-semibold">
+                  Teléfono <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="emp-phone"
+                  name="phone"
+                  type="text"
+                  value={phoneValue}
+                  onChange={handlePhoneChange}
+                  placeholder="9999-9999"
+                  className="focus-visible:ring-[#753B19]"
+                />
+                {errors.phone && <NativeStyleTooltip message={errors.phone} />}
+              </div>
 
-            {state?.error && <p className="text-sm text-destructive font-medium">{state.error}</p>}
-            {state?.success && <p className="text-sm font-medium text-green-600">{state.success}</p>}
+              <div className="space-y-2 relative">
+                <Label htmlFor="emp-email" className="font-semibold">
+                  Correo <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="emp-email"
+                  name="email"
+                  type="email"
+                  placeholder="example@dominio.com"
+                  onChange={() => setErrors(prev => ({ ...prev, email: "" }))}
+                  className="focus-visible:ring-[#753B19]"
+                />
+                {errors.email && <NativeStyleTooltip message={errors.email} />}
+              </div>
 
-            <Button type="submit" className="w-full bg-[#F1B53E] hover:bg-[#d9a337] text-[#753B19] font-bold mt-5">
-              Crear empleado
-            </Button>
-          </form>
-        </div>
-      )}
-    </div>
+              <div className="space-y-2 relative">
+                <Label htmlFor="emp-password" className="font-semibold">
+                  Contraseña <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="emp-password"
+                  name="password"
+                  type="password"
+                  placeholder="********"
+                  onChange={() => setErrors(prev => ({ ...prev, password: "" }))}
+                  className="focus-visible:ring-[#753B19]"
+                />
+                {errors.password && <NativeStyleTooltip message={errors.password} />}
+              </div>
+
+              {state?.error && <p className="text-sm text-destructive font-medium">{state.error}</p>}
+
+              <Button type="submit" className="w-full bg-[#F1B53E] hover:bg-[#d9a337] text-[#753B19] font-bold mt-5">
+                Crear empleado
+              </Button>
+            </form>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

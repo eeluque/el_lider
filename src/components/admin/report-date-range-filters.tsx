@@ -142,7 +142,7 @@ export function ReportDateRangeFilters({
             />
           </div>
 
-          <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-wrap items-end gap-3 ml-30">
             <DateField label="Desde" name="from" value={fromValue} onChange={setFromValue} />
             <DateField label="Hasta" name="to" value={toValue} onChange={setToValue} />
             <button
