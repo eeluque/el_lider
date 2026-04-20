@@ -13,6 +13,8 @@ export default async function AdminInventoryPage() {
     getInventoryMovements(),
   ]);
   const canManageIngredients = session?.user?.role === "admin";
+  const units = [...new Set(ingredients.map((i: { unit: string }) => i.unit).filter(Boolean))];
+
 
   return (
     <div className="space-y-8">
@@ -23,7 +25,7 @@ export default async function AdminInventoryPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 items-stretch">
         <div className="lg:col-span-4 flex">
-          {canManageIngredients && <CreateIngredientForm />}
+          {canManageIngredients && <CreateIngredientForm units={units} />}
         </div>
         <div className="lg:col-span-6 flex">
           <InventoryMovementForm ingredients={ingredients.filter((i) => i.active)} />
@@ -65,11 +67,10 @@ export default async function AdminInventoryPage() {
                     {(movement as { ingredient?: { name?: string } }).ingredient?.name ?? "Insumo"}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    {/* Badges con colores personalizados */}
                     <Badge 
                       variant="outline"
                       className={`
-                        font-bold text-[10px] uppercase px-2 py-0.5 border-none
+                        font-semibold text-[10px] uppercase px-2 py-0.5 border-none
                         ${movement.movement_type === "IN" 
                           ? "bg-green-100 text-[#065f46]" // Verde suave para entradas
                           : movement.movement_type === "OUT" 

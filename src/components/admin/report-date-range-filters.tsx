@@ -89,9 +89,6 @@ function DateField({
         onChange={(event) => onChange(event.target.value)}
         className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
       />
-      <p className="mt-1 text-[11px] text-muted-foreground">
-        Formato: {formatDateInputDisplay(value)}
-      </p>
     </div>
   );
 }

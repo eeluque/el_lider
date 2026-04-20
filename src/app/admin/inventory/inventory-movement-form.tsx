@@ -29,6 +29,7 @@ function NativeStyleTooltip({ message }: { message: string }) {
 export function InventoryMovementForm({ ingredients }: { ingredients: any[] }) {
   const [open, setOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [state, formAction] = useActionState(registerInventoryMovement, null as InventoryFormState);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     const formData = new FormData(e.currentTarget);
@@ -51,7 +52,7 @@ export function InventoryMovementForm({ ingredients }: { ingredients: any[] }) {
 
       {open && (
         <div className="bg-white p-4 border-x border-b border-neutral-200 rounded-b-md shadow-sm flex-grow flex flex-col justify-between">
-          <form onSubmit={handleSubmit} className="space-y-3" noValidate>
+          <form action={formAction} onSubmit={handleSubmit} className="space-y-3" noValidate>
             <p className="text-[13px] text-neutral-600 mb-2">Gestiona entradas, salidas o ajustes de stock.</p>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1 relative">
@@ -73,7 +74,7 @@ export function InventoryMovementForm({ ingredients }: { ingredients: any[] }) {
                 {errors.movementType && <NativeStyleTooltip message={errors.movementType} />}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 mt-6">
               <div className="space-y-1 relative">
                 <Label className="text-xs font-bold text-neutral-700">Cantidad <span className="text-red-500">*</span></Label>
                 <Input 
@@ -92,6 +93,8 @@ export function InventoryMovementForm({ ingredients }: { ingredients: any[] }) {
                 <Input name="reason" placeholder="Ej. Compra semanal" className="h-9 focus-visible:ring-[#753B19]" />
               </div>
             </div>
+            {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
+            {state?.success && <p className="text-sm text-green-600">{state.success}</p>}
             <Button type="submit" className="w-full bg-[#f5bf56] hover:bg-[#F1B53E] text-[#753B19] font-semibold h-10 mt-5">Guardar movimiento</Button>
           </form>
         </div>

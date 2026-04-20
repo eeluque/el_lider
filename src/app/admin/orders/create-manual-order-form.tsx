@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import type { MenuItem } from "@/types";
 import { createManualOrder, type ManualOrderFormState } from "./actions";
 
-type OrderLine = { id: number; menuItemId: string; quantity: number };
+type OrderLine = { id: number; menuItemId: string; quantity: number; _error?: boolean };
 const EMPTY_LINE: OrderLine = { id: Date.now(), menuItemId: "", quantity: 1 };
 
 function NativeStyleTooltip({ message }: { message: string }) {
@@ -49,24 +49,34 @@ export function CreateManualOrderForm({ menuItems }: { menuItems: MenuItem[] }) 
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    const formData = new FormData(e.currentTarget);
-    const name = formData.get("customerName") as string;
-    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+  const formData = new FormData(e.currentTarget);
+  const name = formData.get("customerName") as string;
+  const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 
-    const newErrors = {
-      customerName: !name.trim() 
-        ? "El campo es obligatorio" 
-        : (!nameRegex.test(name) ? "El nombre solo puede contener letras" : ""),
-      customerPhone: !phoneValue.trim() 
-        ? "Este campo es obligatorio" 
-        : (phoneValue.length < 9 ? "Ingresa un teléfono válido" : ""),
-    };
-
-    setErrors(newErrors);
-    if (Object.values(newErrors).some(msg => msg !== "")) {
-      e.preventDefault();
-    }
+  const newErrors = {
+    customerName: !name.trim()
+      ? "El campo es obligatorio"
+      : (!nameRegex.test(name) ? "El nombre solo puede contener letras" : ""),
+    customerPhone: !phoneValue.trim()
+      ? "Este campo es obligatorio"
+      : (phoneValue.length < 9 ? "Ingresa un teléfono válido" : ""),
   };
+
+  // Validar que ninguna línea tenga platillo vacío
+  const hasEmptyLine = lines.some(line => !line.menuItemId);
+  if (hasEmptyLine) {
+    e.preventDefault();
+    setErrors(newErrors);
+    // Marcar visualmente las líneas vacías
+    setLines(curr => curr.map(l => ({ ...l, _error: !l.menuItemId })));
+    return;
+  }
+
+  setErrors(newErrors);
+  if (Object.values(newErrors).some(msg => msg !== "")) {
+    e.preventDefault();
+  }
+};
 
   const updateLine = (id: number, patch: Partial<OrderLine>) => {
     setLines((curr) => curr.map((l) => (l.id === id ? { ...l, ...patch } : l)));
@@ -124,20 +134,25 @@ export function CreateManualOrderForm({ menuItems }: { menuItems: MenuItem[] }) 
 
               {lines.map((line, idx) => (
                 <div key={line.id} className="flex gap-3 items-end bg-muted/20 p-3 rounded-lg border border-dashed">
-                  <div className="flex-1 space-y-2">
+                  <div className="flex-1 space-y-2 relative">
                     <Label className="text-xs">Platillo #{idx + 1}</Label>
                     <select
                       name={`itemId-${line.id}`}
                       required
                       value={line.menuItemId}
-                      onChange={(e) => updateLine(line.id, { menuItemId: e.target.value })}
-                      className="w-full h-10 rounded-md border border-input bg-white px-3 text-sm focus:ring-2 focus:ring-[#753B19]/50 outline-none"
+                      onChange={(e) => {
+                        updateLine(line.id, { menuItemId: e.target.value, _error: false });
+                      }}
+                      className={`w-full h-10 rounded-md border bg-white px-3 text-sm focus:ring-2 focus:ring-[#753B19]/50 outline-none ${
+                        line._error ? "border-red-500 ring-1 ring-red-500" : "border-input"
+                      }`}
                     >
                       <option value="">Seleccionar...</option>
                       {menuItems.map((m) => (
                         <option key={m.id} value={m.id}>{m.name} - L. {Number(m.price).toFixed(2)}</option>
                       ))}
                     </select>
+                    {line._error && <NativeStyleTooltip message="Selecciona un platillo" />}
                   </div>
                   <div className="w-24 space-y-2">
                     <Label className="text-xs">Cant.</Label>
