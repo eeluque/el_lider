@@ -130,6 +130,15 @@
   --sidebar-ring: rgb(var(--brand-rust));
 }
 
+@keyframes shrink {
+  0% { width: 100%; }
+  100% { width: 0%; }
+}
+
+.animate-shrink {
+  animation: shrink 5s linear forwards;
+}
+
 /* Report table*/
 
 .report-table-header {

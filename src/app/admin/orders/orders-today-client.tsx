@@ -178,7 +178,6 @@ export function OrdersTodayClient({
                     Haz clic en el estado para avanzar a {getOrderStatusLabel(nextStatus)}.
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground">Registrado: {formatCentralDateTime(order.created_at)}</p>
                 <Link href={`/admin/orders/${order.id}`} className="block">
                   <Button variant="outline" size="sm" className="w-full">
                     Ver detalle

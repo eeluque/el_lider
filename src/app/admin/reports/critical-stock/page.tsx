@@ -66,11 +66,7 @@ export default async function CriticalStockPage({
         })}
       />
 
-      <div className="overflow-hidden rounded-xl border border-primary/15 bg-card shadow-sm">
-        <div className="border-b border-primary/10 bg-card px-5 py-4">
-          <h2 className="font-serif text-lg font-semibold text-foreground">Stock crítico</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Insumos con existencias iguales o por debajo del mínimo definido.</p>
-        </div>
+      <div className="overflow-hidden rounded-xl border border-primary/15 bg-card shadow-sm mt-8">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
